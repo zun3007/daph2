@@ -1,44 +1,39 @@
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
-// ============================================
-// SIMPLE LOADING SCREEN - CALM & RELAXING
-// ============================================
+// Encouraging messages during loading
+const messages = [
+  { text: 'Đang phân tích tính cách của bạn...', icon: '🎭' },
+  { text: 'Khám phá điểm mạnh và tài năng...', icon: '✨' },
+  { text: 'Tìm kiếm nghề nghiệp phù hợp...', icon: '🎯' },
+  { text: 'Matching với các công ty...', icon: '🏢' },
+  { text: 'Xây dựng lộ trình phát triển...', icon: '📈' },
+  { text: 'Hoàn thiện báo cáo của bạn...', icon: '📊' },
+];
+
+// Fun facts
+const funFacts = [
+  'Người có định hướng rõ ràng hạnh phúc hơn 40% trong công việc',
+  'AI có thể phân tích hơn 1,000 data points trong vài giây',
+  '70% công việc tương lai chưa tồn tại ngày hôm nay',
+  'IQ chỉ chiếm 20% thành công, phần còn lại là EQ và kỹ năng',
+  'Tìm đúng nghề giúp bạn kiếm được 30% lương cao hơn',
+  '97% học sinh Việt Nam chưa biết nghề phù hợp với mình',
+];
+
+// Milestones
+const milestones = [
+  { at: 25, label: 'Khởi đầu tốt!', icon: '🚀', color: 'emerald' },
+  { at: 50, label: 'Đã được nửa rồi!', icon: '⚡', color: 'teal' },
+  { at: 75, label: 'Gần xong rồi!', icon: '🔥', color: 'cyan' },
+  { at: 100, label: 'Hoàn thành!', icon: '🎉', color: 'green' },
+];
 
 const LoadingScreen = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
-  const [currentMessage, setCurrentMessage] = useState(0);
   const [currentFact, setCurrentFact] = useState(0);
   const [milestone, setMilestone] = useState(null);
-
-  // Encouraging messages during loading
-  const messages = [
-    { text: 'Đang phân tích tính cách của bạn...', icon: '🎭' },
-    { text: 'Khám phá điểm mạnh và tài năng...', icon: '✨' },
-    { text: 'Tìm kiếm nghề nghiệp phù hợp...', icon: '🎯' },
-    { text: 'Matching với các công ty...', icon: '🏢' },
-    { text: 'Xây dựng lộ trình phát triển...', icon: '📈' },
-    { text: 'Hoàn thiện báo cáo của bạn...', icon: '📊' },
-  ];
-
-  // Fun facts
-  const funFacts = [
-    'Người có định hướng rõ ràng hạnh phúc hơn 40% trong công việc',
-    'AI có thể phân tích hơn 1,000 data points trong vài giây',
-    '70% công việc tương lai chưa tồn tại ngày hôm nay',
-    'IQ chỉ chiếm 20% thành công, phần còn lại là EQ và kỹ năng',
-    'Tìm đúng nghề giúp bạn kiếm được 30% lương cao hơn',
-    '97% học sinh Việt Nam chưa biết nghề phù hợp với mình',
-  ];
-
-  // Milestones
-  const milestones = [
-    { at: 25, label: 'Khởi đầu tốt!', icon: '🚀', color: 'emerald' },
-    { at: 50, label: 'Đã được nửa rồi!', icon: '⚡', color: 'teal' },
-    { at: 75, label: 'Gần xong rồi!', icon: '🔥', color: 'cyan' },
-    { at: 100, label: 'Hoàn thành!', icon: '🎉', color: 'green' },
-  ];
 
   // Smooth progress simulation
   useEffect(() => {
@@ -71,13 +66,12 @@ const LoadingScreen = ({ onComplete }) => {
     }, interval);
 
     return () => clearInterval(timer);
-  }, [milestones, onComplete]);
+  }, [onComplete]);
 
-  // Rotate messages based on progress
-  useEffect(() => {
+  const currentMessage = useMemo(() => {
     const messageIndex = Math.floor((progress / 100) * messages.length);
-    setCurrentMessage(Math.min(messageIndex, messages.length - 1));
-  }, [progress, messages.length]);
+    return Math.min(messageIndex, messages.length - 1);
+  }, [progress]);
 
   // Rotate fun facts
   useEffect(() => {
@@ -85,7 +79,7 @@ const LoadingScreen = ({ onComplete }) => {
       setCurrentFact((prev) => (prev + 1) % funFacts.length);
     }, 5000); // Every 5 seconds
     return () => clearInterval(interval);
-  }, [funFacts.length]);
+  }, []);
 
   const currentMsg = messages[currentMessage];
 

@@ -70,7 +70,7 @@ const ProblemSection = () => {
 
   return (
     <SectionContainer gradient>
-      <div ref={ref} className='max-w-7xl mx-auto w-full'>
+      <div id='problem' ref={ref} className='max-w-7xl mx-auto w-full'>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}

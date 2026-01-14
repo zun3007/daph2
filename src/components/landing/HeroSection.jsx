@@ -3,8 +3,10 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 
 import BackgroundPattern from '../utils/BackgroundPattern';
 import ScrollIndicator from '../utils/ScrollIndicator';
+import { useNavigate } from 'react-router-dom';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 500], [0, 100]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
@@ -89,6 +91,9 @@ const HeroSection = () => {
                 boxShadow: '0 20px 40px rgba(16, 185, 129, 0.2)',
               }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                navigate('/test');
+              }}
               className='px-8 py-4 bg-linear-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300'
             >
               Bắt Đầu Đánh Giá
