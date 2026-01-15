@@ -100,6 +100,12 @@ const HeroSection = () => {
             </motion.button>
 
             <motion.button
+              onClick={() => {
+                document.getElementById('problem').scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center',
+                });
+              }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className='px-8 py-4 bg-white text-emerald-600 border-2 border-emerald-200 rounded-xl text-lg font-semibold hover:border-emerald-300 transition-all duration-300'

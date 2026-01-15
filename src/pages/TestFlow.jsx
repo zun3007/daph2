@@ -108,7 +108,7 @@ function TestFlow() {
       {/* Module Progress Stepper (Mobile - horizontal scroll) */}
       <div className='bg-white border-b border-gray-200 overflow-x-auto'>
         <div className='max-w-7xl mx-auto px-4 py-4'>
-          <div className='flex items-center gap-2 min-w-max'>
+          <div className='flex items-center justify-center gap-2 min-w-max'>
             {modules.map((module, idx) => {
               const isCompleted = progress.completedModules.includes(module.id);
               const isCurrent = module.id === currentModule;

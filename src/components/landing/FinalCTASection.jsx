@@ -1,8 +1,10 @@
 // eslint-disable-next-line no-unused-vars
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const FinalCTASection = () => {
+  const navigate = useNavigate();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
@@ -77,6 +79,7 @@ const FinalCTASection = () => {
             className='flex flex-col sm:flex-row gap-4 justify-center items-center mb-12'
           >
             <motion.button
+              onClick={() => navigate('/test')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className='px-10 py-5 bg-white text-emerald-600 rounded-xl text-xl font-bold shadow-2xl hover:shadow-white/20 transition-all duration-300'

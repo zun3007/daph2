@@ -4,6 +4,12 @@ import { motion } from 'framer-motion';
 const ScrollIndicator = () => {
   return (
     <motion.div
+      onClick={() => {
+        document.getElementById('problem').scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }}
       animate={{ y: [0, 8, 0] }}
       transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
       className='absolute bottom-8 left-1/2 transform -translate-x-1/2 cursor-pointer'

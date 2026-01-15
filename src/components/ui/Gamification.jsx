@@ -37,8 +37,8 @@ export const GameWrapper = ({
 
   const triggerConfetti = () => {
     confetti({
-      particleCount: 50, // Reduced from 100
-      spread: 60, // Reduced from 70
+      particleCount: 50,
+      spread: 60,
       origin: { y: 0.6 },
       disableForReducedMotion: true,
     });
@@ -50,16 +50,16 @@ export const GameWrapper = ({
       (m) => m.at === progress && currentQuestion > 0
     );
 
-    if (milestone && milestone != showMilestone) {
+    if (milestone) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowMilestone(milestone);
       triggerConfetti();
 
       setTimeout(() => {
         setShowMilestone(null);
-      }, 3000);
+      }, 2000); // Reduced to 2s
     }
-  }, [progress, currentQuestion, showMilestone]); // Removed milestones - it's static
+  }, [progress, currentQuestion]);
 
   // Completion - only call once when reaching 100%
   useEffect(() => {
@@ -69,7 +69,6 @@ export const GameWrapper = ({
       !hasCompletedRef.current
     ) {
       hasCompletedRef.current = true;
-      // Don't trigger confetti here - let CompletionCelebration handle it
       setTimeout(() => {
         if (onComplete) {
           onComplete();
@@ -109,7 +108,7 @@ export const GameWrapper = ({
               />
 
               {/* Milestone markers */}
-              {showMilestone?.map((m) => (
+              {MILESTONES.map((m) => (
                 <div
                   key={m.at}
                   className={`absolute top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full ${
@@ -157,33 +156,31 @@ export const GameWrapper = ({
         </motion.div>
       </div>
 
-      {/* Milestone Celebration Overlay */}
+      {/* Milestone Celebration - Compact Notification (NO MORE BLOCKING!) */}
       <AnimatePresence>
         {showMilestone && (
           <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            className='fixed inset-0 flex items-center justify-center z-50 pointer-events-none'
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            className='fixed top-20 left-1/2 transform -translate-x-1/2 z-50'
           >
             <motion.div
-              animate={{
-                rotate: [0, -10, 10, -10, 0],
-                scale: [1, 1.1, 1],
-              }}
+              animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 0.5 }}
-              className='bg-white rounded-3xl p-12 shadow-2xl border-4 border-emerald-300'
+              className='bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-2xl px-8 py-4 shadow-2xl border-2 border-white flex items-center gap-3'
             >
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: 2 }}
-                className='text-8xl mb-4 text-center'
+              <motion.span
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 0.6 }}
+                className='text-4xl'
               >
                 {showMilestone.icon}
-              </motion.div>
-              <h2 className='text-4xl font-bold text-center text-emerald-700'>
-                {showMilestone.label}
-              </h2>
+              </motion.span>
+              <div>
+                <p className='text-xl font-bold'>{showMilestone.label}</p>
+                <p className='text-sm text-emerald-100'>Keep going! 💪</p>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -267,8 +264,7 @@ export const StreakCounter = ({ streak }) => {
 
 export const CompletionCelebration = ({ stats, onContinue }) => {
   useEffect(() => {
-    // Optimized confetti - lighter and faster
-    const duration = 2 * 1000; // Reduced from 3s to 2s
+    const duration = 2 * 1000;
     const animationEnd = Date.now() + duration;
 
     const randomInRange = (min, max) => {
@@ -282,15 +278,14 @@ export const CompletionCelebration = ({ stats, onContinue }) => {
         return clearInterval(interval);
       }
 
-      // Reduced particle count for performance
       confetti({
-        particleCount: 2, // Reduced from 3 to 2
+        particleCount: 2,
         angle: randomInRange(55, 125),
         spread: randomInRange(50, 70),
         origin: { y: Math.random() - 0.2 },
-        disableForReducedMotion: true, // Respect user preferences
+        disableForReducedMotion: true,
       });
-    }, 30); // Increased interval from 20ms to 30ms
+    }, 30);
 
     return () => clearInterval(interval);
   }, []);
@@ -305,7 +300,7 @@ export const CompletionCelebration = ({ stats, onContinue }) => {
       <motion.div
         initial={{ scale: 0.8, y: 50 }}
         animate={{ scale: 1, y: 0 }}
-        transition={{ type: 'spring', duration: 0.5 }} // Faster animation
+        transition={{ type: 'spring', duration: 0.5 }}
         className='bg-white rounded-3xl p-12 max-w-2xl w-full text-center'
       >
         {/* Icon */}
@@ -366,7 +361,7 @@ export const CompletionCelebration = ({ stats, onContinue }) => {
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{
-                    delay: idx * 0.1, // Reduced from 0.2 to 0.1
+                    delay: idx * 0.1,
                     type: 'spring',
                     stiffness: 200,
                     damping: 15,
@@ -397,9 +392,141 @@ export const CompletionCelebration = ({ stats, onContinue }) => {
   );
 };
 
+// ============================================
+// FUN INTERLUDE COMPONENT
+// Show tips/facts between questions (every 5 questions)
+// ============================================
+
+const FUN_CONTENT = [
+  { icon: '💡', title: 'Tip!', text: '80% người thành công có EQ cao hơn IQ!' },
+  {
+    icon: '🎯',
+    title: 'Fun Fact!',
+    text: 'Bill Gates làm bài test tính cách mỗi năm để tự nhận thức',
+  },
+  {
+    icon: '🚀',
+    title: 'Keep Going!',
+    text: 'Bạn đang làm rất tốt! Chỉ còn chút nữa thôi!',
+  },
+  {
+    icon: '🌟',
+    title: 'Did You Know?',
+    text: 'Chỉ 5% người hoàn thành hết bài test này!',
+  },
+  {
+    icon: '🧠',
+    title: 'Brain Break!',
+    text: 'Take a deep breath... Bạn đang làm tuyệt vời!',
+  },
+  {
+    icon: '💪',
+    title: 'Motivation!',
+    text: 'Mỗi câu trả lời giúp bạn hiểu mình hơn một chút!',
+  },
+  {
+    icon: '🎨',
+    title: 'Fun Fact!',
+    text: 'Tính cách có thể thay đổi theo thời gian và kinh nghiệm!',
+  },
+  {
+    icon: '⚡',
+    title: 'Quick Tip!',
+    text: 'Trả lời theo intuition đầu tiên - thường đúng nhất!',
+  },
+  {
+    icon: '🔥',
+    title: 'You Rock!',
+    text: 'Bạn thuộc top 10% người kiên nhẫn nhất!',
+  },
+  {
+    icon: '🎁',
+    title: 'Almost There!',
+    text: 'Kết quả của bạn đang được chuẩn bị... 🎉',
+  },
+];
+
+export const FunInterlude = ({ onContinue }) => {
+  // Pick random content
+  // eslint-disable-next-line react-hooks/purity
+  const content = FUN_CONTENT[Math.floor(Math.random() * FUN_CONTENT.length)];
+
+  // Auto-continue after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onContinue();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onContinue]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className='fixed inset-0 flex items-center justify-center z-40 bg-linear-to-br from-emerald-50/50 to-teal-50/50 backdrop-blur-sm'
+    >
+      <motion.div
+        initial={{ y: 20 }}
+        animate={{ y: 0 }}
+        className='bg-white rounded-3xl p-12 max-w-lg text-center shadow-2xl border-2 border-emerald-200'
+      >
+        {/* Icon */}
+        <motion.div
+          animate={{
+            rotate: [0, -10, 10, -10, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{ duration: 0.6, repeat: 1 }}
+          className='text-8xl mb-6'
+        >
+          {content.icon}
+        </motion.div>
+
+        {/* Title */}
+        <h3 className='text-2xl font-bold text-emerald-600 mb-3'>
+          {content.title}
+        </h3>
+
+        {/* Text */}
+        <p className='text-lg text-gray-700 mb-6'>{content.text}</p>
+
+        {/* Progress indicator */}
+        <div className='flex justify-center gap-1'>
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+            className='w-2 h-2 bg-emerald-500 rounded-full'
+          />
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+            className='w-2 h-2 bg-emerald-500 rounded-full'
+          />
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+            className='w-2 h-2 bg-emerald-500 rounded-full'
+          />
+        </div>
+
+        {/* Skip button */}
+        <button
+          onClick={onContinue}
+          className='mt-6 text-sm text-gray-500 hover:text-gray-700 transition-colors'
+        >
+          Skip →
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 export default {
   GameWrapper,
   ProgressIndicator,
   StreakCounter,
   CompletionCelebration,
+  FunInterlude,
 };

@@ -4,13 +4,15 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { nanoid } from 'nanoid';
 
 const TestContext = createContext();
 
-const modules = [
+// Static module configuration
+const MODULES = [
   { id: 'personality', name: 'Tính Cách', icon: '🎭', questionCount: 20 },
   { id: 'behavior', name: 'Hành Vi', icon: '🎯', questionCount: 15 },
   { id: 'iq', name: 'IQ', icon: '🧠', questionCount: 12 },
@@ -32,39 +34,26 @@ export const useTestContext = () => {
 export const TestProvider = ({ children }) => {
   const navigate = useNavigate();
 
+  // Track if we're initializing to prevent auto-save during init
+  const isInitializing = useRef(true);
+
   // Session & Progress
   const [sessionId, setSessionId] = useState(null);
   const [currentModule, setCurrentModule] = useState('personality');
 
   // Test answers
-  const [answers, setAnswers] = useState({
-    personality: {},
-    behavior: {},
-    iq: {},
-    eq: {},
-    ikigai: {},
-    career: {},
-    personal: {},
-  });
+  const [answers, setAnswers] = useState({});
 
   // Progress tracking
   const [progress, setProgress] = useState({
     completedModules: [],
     totalModules: 7,
     answeredQuestions: 0,
-    totalQuestions: 96, // Approximate total
+    totalQuestions: 106,
   });
 
-  const saveSession = (sid, module, answersData, progressData) => {
-    const session = {
-      sessionId: sid,
-      currentModule: module,
-      answers: answersData,
-      progress: progressData,
-      lastUpdated: new Date().toISOString(),
-    };
-    localStorage.setItem('daph2_session', JSON.stringify(session));
-  };
+  // Use static modules config
+  const modules = MODULES;
 
   // Initialize session
   useEffect(() => {
@@ -72,29 +61,71 @@ export const TestProvider = ({ children }) => {
     const savedSession = localStorage.getItem('daph2_session');
 
     if (savedSession) {
-      const session = JSON.parse(savedSession);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSessionId(session.sessionId);
-      setCurrentModule(session.currentModule);
-      setAnswers(session.answers);
-      setProgress(session.progress);
+      try {
+        const session = JSON.parse(savedSession);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSessionId(session.sessionId);
+        setCurrentModule(session.currentModule);
+        setAnswers(session.answers || {});
+        setProgress(
+          session.progress || {
+            totalQuestions: 106,
+            answeredQuestions: 0,
+            completedModules: [],
+          }
+        );
+      } catch (error) {
+        console.error('Error loading session:', error);
+        // Create new session if corrupted
+        const newSessionId = nanoid();
+        setSessionId(newSessionId);
+      }
     } else {
       // Create new session
       const newSessionId = nanoid();
       setSessionId(newSessionId);
-      saveSession(newSessionId, 'personality', {}, progress);
     }
-  }, [progress]);
 
-  // Auto-save on changes
-  useEffect(() => {
-    if (sessionId) {
-      saveSession(sessionId, currentModule, answers, progress);
+    // Mark initialization complete after state updates settle
+    setTimeout(() => {
+      isInitializing.current = false;
+    }, 0);
+  }, []); // No dependencies - only run once
+
+  // Save session to localStorage (memoized)
+  const saveSession = useCallback((sid, module, answersData, progressData) => {
+    try {
+      const session = {
+        sessionId: sid,
+        currentModule: module,
+        answers: answersData,
+        progress: progressData,
+        lastUpdated: new Date().toISOString(),
+      };
+      localStorage.setItem('daph2_session', JSON.stringify(session));
+    } catch (error) {
+      console.error('Error saving session:', error);
     }
-  }, [sessionId, currentModule, answers, progress]);
+  }, []); // No dependencies - function doesn't depend on external state
+
+  // Auto-save on changes (debounced to prevent too many writes)
+  useEffect(() => {
+    // Skip auto-save during initialization
+    if (isInitializing.current) return;
+
+    // Don't save until session exists
+    if (!sessionId) return;
+
+    // Debounce save to prevent infinite loops
+    const timeoutId = setTimeout(() => {
+      saveSession(sessionId, currentModule, answers, progress);
+    }, 100); // 100ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [sessionId, currentModule, answers, progress, saveSession]);
 
   // Save answer for a question
-  const saveAnswer = (moduleId, questionId, answer) => {
+  const saveAnswer = useCallback((moduleId, questionId, answer) => {
     setAnswers((prev) => ({
       ...prev,
       [moduleId]: {
@@ -108,18 +139,18 @@ export const TestProvider = ({ children }) => {
       ...prev,
       answeredQuestions: prev.answeredQuestions + 1,
     }));
-  };
+  }, []); // No external dependencies
 
   // Mark module as complete
-  const completeModule = (moduleId) => {
+  const completeModule = useCallback((moduleId) => {
     setProgress((prev) => ({
       ...prev,
       completedModules: [...prev.completedModules, moduleId],
     }));
-  };
+  }, []);
 
   // Navigate to next module
-  const goToNextModule = () => {
+  const goToNextModule = useCallback(() => {
     const currentIndex = modules.findIndex((m) => m.id === currentModule);
 
     if (currentIndex < modules.length - 1) {
@@ -128,12 +159,12 @@ export const TestProvider = ({ children }) => {
       navigate(`/test/${nextModule.id}`);
     } else {
       // All modules complete - go to loading
-      submitTest();
+      navigate('/loading');
     }
-  };
+  }, [modules, currentModule, navigate]);
 
   // Navigate to previous module
-  const goToPreviousModule = () => {
+  const goToPreviousModule = useCallback(() => {
     const currentIndex = modules.findIndex((m) => m.id === currentModule);
 
     if (currentIndex > 0) {
@@ -141,10 +172,10 @@ export const TestProvider = ({ children }) => {
       setCurrentModule(prevModule.id);
       navigate(`/test/${prevModule.id}`);
     }
-  };
+  }, [modules, currentModule, navigate]);
 
   // Submit test to backend
-  const submitTest = async () => {
+  const submitTest = useCallback(async () => {
     try {
       // TODO: Save to Supabase
       // const { data, error } = await supabase
@@ -174,36 +205,28 @@ export const TestProvider = ({ children }) => {
     } catch (error) {
       console.error('Error submitting test:', error);
     }
-  };
+  }, [sessionId, answers, navigate]);
 
   // Reset test
-  const resetTest = () => {
+  const resetTest = useCallback(() => {
     localStorage.removeItem('daph2_session');
     const newSessionId = nanoid();
     setSessionId(newSessionId);
     setCurrentModule('personality');
-    setAnswers({
-      personality: {},
-      behavior: {},
-      iq: {},
-      eq: {},
-      ikigai: {},
-      career: {},
-      personal: {},
-    });
+    setAnswers({});
     setProgress({
       completedModules: [],
       totalModules: 7,
       answeredQuestions: 0,
-      totalQuestions: 96,
+      totalQuestions: 106,
     });
     navigate('/test');
-  };
+  }, [navigate]);
 
   // Get current module info
   const getCurrentModuleInfo = useCallback(() => {
     return modules.find((m) => m.id === currentModule);
-  }, [currentModule]);
+  }, [modules, currentModule]);
 
   // Check if module is completed
   const isModuleCompleted = useCallback(

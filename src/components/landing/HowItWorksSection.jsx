@@ -2,8 +2,10 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import SectionContainer from '../utils/SectionContainer';
+import { useNavigate } from 'react-router-dom';
 
 const HowItWorksSection = () => {
+  const navigate = useNavigate();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
@@ -136,6 +138,7 @@ const HowItWorksSection = () => {
             Toàn bộ quá trình chỉ mất 15-20 phút
           </p>
           <motion.button
+            onClick={() => navigate('/test')}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className='px-8 py-4 bg-linear-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300'
