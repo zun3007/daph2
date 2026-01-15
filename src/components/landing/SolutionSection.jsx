@@ -243,6 +243,12 @@ const SolutionSection = () => {
               className='mt-8'
             >
               <motion.button
+                onClick={() => {
+                  document.getElementById('how-it-works').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                  });
+                }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className='px-6 py-3 bg-linear-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 inline-flex items-center gap-2'

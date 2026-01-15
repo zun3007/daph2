@@ -4,10 +4,15 @@ import { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 
 // ============================================
-// GAMIFICATION WRAPPER - FULL SCREEN FIT
+// GAMIFICATION WRAPPER - FIXED VERSION
 // ============================================
+//
+// 🔧 FIXES:
+// 1. Không trigger onComplete ngay khi mount (dùng hasMountedRef)
+// 2. hasCompletedRef để tránh double trigger
+// 3. Chỉ trigger khi question THAY ĐỔI (không phải initial)
+// 4. Responsive CompletionCelebration (không scroll)
 
-// Static milestone configuration
 const MILESTONES = [
   { at: 25, label: 'Great Start!', icon: '🚀', color: 'blue' },
   { at: 50, label: 'Halfway Hero!', icon: '⚡', color: 'yellow' },
@@ -23,9 +28,22 @@ export const GameWrapper = ({
 }) => {
   const [showMilestone, setShowMilestone] = useState(null);
   const [totalTime, setTotalTime] = useState(0);
+
+  // Refs để tránh bugs
   const hasCompletedRef = useRef(false);
+  const hasMountedRef = useRef(false);
+  const previousQuestionRef = useRef(currentQuestion);
 
   const progress = Math.round((currentQuestion / totalQuestions) * 100);
+
+  // Mark as mounted after first render
+  useEffect(() => {
+    // Delay để đảm bảo không trigger ngay khi mount
+    const timer = setTimeout(() => {
+      hasMountedRef.current = true;
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Timer
   useEffect(() => {
@@ -50,7 +68,8 @@ export const GameWrapper = ({
       (m) => m.at === progress && currentQuestion > 0
     );
 
-    if (milestone) {
+    if (milestone && hasMountedRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowMilestone(milestone);
       triggerConfetti();
 
@@ -60,14 +79,29 @@ export const GameWrapper = ({
     }
   }, [progress, currentQuestion]);
 
-  // Completion
+  // Completion - CHỈ trigger khi user thực sự hoàn thành (không phải khi mount)
   useEffect(() => {
+    // Kiểm tra xem question có thay đổi không
+    const questionChanged = previousQuestionRef.current !== currentQuestion;
+    previousQuestionRef.current = currentQuestion;
+
+    // Điều kiện trigger:
+    // 1. Đã mount xong (không phải initial render)
+    // 2. currentQuestion === totalQuestions
+    // 3. currentQuestion > 0 (có câu hỏi)
+    // 4. Chưa complete trước đó
+    // 5. Question đã thay đổi (user vừa trả lời xong câu cuối)
+
     if (
+      hasMountedRef.current &&
       currentQuestion === totalQuestions &&
       currentQuestion > 0 &&
-      !hasCompletedRef.current
+      !hasCompletedRef.current &&
+      questionChanged
     ) {
       hasCompletedRef.current = true;
+      console.log('GameWrapper: triggering onComplete');
+
       setTimeout(() => {
         if (onComplete) {
           onComplete();
@@ -83,9 +117,9 @@ export const GameWrapper = ({
   };
 
   return (
-    <div className='h-full flex flex-col bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50'>
+    <div className='h-full flex flex-col bg-linear-to-br from-emerald-50 via-teal-50 to-cyan-50'>
       {/* Top Stats Bar - Compact */}
-      <div className='flex-shrink-0 px-4 pt-4 pb-3'>
+      <div className='shrink-0 px-4 pt-4 pb-3'>
         <div className='max-w-4xl mx-auto'>
           <div className='bg-white rounded-2xl shadow-lg p-3 sm:p-4'>
             {/* Progress Bar */}
@@ -101,7 +135,7 @@ export const GameWrapper = ({
 
               <div className='relative h-2.5 sm:h-3 bg-gray-200 rounded-full overflow-hidden'>
                 <motion.div
-                  className='absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full'
+                  className='absolute inset-y-0 left-0 bg-linear-to-r from-emerald-500 to-teal-500 rounded-full'
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -171,7 +205,7 @@ export const GameWrapper = ({
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 0.5 }}
-              className='bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl px-6 sm:px-8 py-3 sm:py-4 shadow-2xl border-2 border-white flex items-center gap-2 sm:gap-3'
+              className='bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-2xl px-6 sm:px-8 py-3 sm:py-4 shadow-2xl border-2 border-white flex items-center gap-2 sm:gap-3'
             >
               <motion.span
                 animate={{ rotate: [0, 360] }}
@@ -197,7 +231,7 @@ export const GameWrapper = ({
 };
 
 // ============================================
-// COMPLETION CELEBRATION
+// COMPLETION CELEBRATION - RESPONSIVE (NO SCROLL)
 // ============================================
 
 export const CompletionCelebration = ({ stats, onContinue }) => {
@@ -233,66 +267,75 @@ export const CompletionCelebration = ({ stats, onContinue }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4'
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4'
     >
       <motion.div
         initial={{ scale: 0.8, y: 50 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: 'spring', duration: 0.5 }}
-        className='bg-white rounded-3xl p-8 sm:p-12 max-w-2xl w-full text-center max-h-[90vh] overflow-y-auto'
+        className='bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 max-w-lg w-full text-center'
       >
         {/* Icon */}
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', duration: 0.5 }}
-          className='text-7xl sm:text-9xl mb-6'
+          className='text-5xl sm:text-6xl md:text-7xl mb-2 sm:mb-4'
         >
           🎉
         </motion.div>
 
         {/* Title */}
-        <h1 className='text-3xl sm:text-5xl font-bold text-gray-900 mb-4'>
+        <h1 className='text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2'>
           Module Complete!
         </h1>
-        <p className='text-lg sm:text-xl text-gray-600 mb-8'>
+        <p className='text-sm sm:text-base text-gray-600 mb-4 sm:mb-6'>
           Amazing work! You're making great progress! 🚀
         </p>
 
-        {/* Stats */}
-        <div className='grid grid-cols-3 gap-3 sm:gap-6 mb-8'>
-          <div className='bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 sm:p-6 border border-emerald-200'>
-            <div className='text-3xl sm:text-4xl mb-2'>⏱️</div>
-            <div className='text-2xl sm:text-3xl font-bold text-emerald-600 mb-1'>
+        {/* Stats Cards */}
+        <div className='grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6'>
+          {/* Time */}
+          <div className='bg-linear-to-br from-emerald-50 to-teal-50 rounded-xl sm:rounded-2xl p-2 sm:p-3 md:p-4 border border-emerald-200'>
+            <div className='text-lg sm:text-2xl md:text-3xl mb-0.5 sm:mb-1'>
+              ⏱️
+            </div>
+            <div className='text-base sm:text-lg md:text-xl font-bold text-emerald-600'>
               {stats.time}
             </div>
-            <div className='text-xs sm:text-sm text-gray-600'>Time</div>
+            <div className='text-[10px] sm:text-xs text-gray-600'>Time</div>
           </div>
 
-          <div className='bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-4 sm:p-6 border border-blue-200'>
-            <div className='text-3xl sm:text-4xl mb-2'>⚡</div>
-            <div className='text-2xl sm:text-3xl font-bold text-blue-600 mb-1'>
+          {/* Speed */}
+          <div className='bg-linear-to-br from-blue-50 to-cyan-50 rounded-xl sm:rounded-2xl p-2 sm:p-3 md:p-4 border border-blue-200'>
+            <div className='text-lg sm:text-2xl md:text-3xl mb-0.5 sm:mb-1'>
+              ⚡
+            </div>
+            <div className='text-base sm:text-lg md:text-xl font-bold text-blue-600'>
               {stats.speed}
             </div>
-            <div className='text-xs sm:text-sm text-gray-600'>Speed</div>
+            <div className='text-[10px] sm:text-xs text-gray-600'>Speed</div>
           </div>
 
-          <div className='bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-4 sm:p-6 border border-orange-200'>
-            <div className='text-3xl sm:text-4xl mb-2'>🔥</div>
-            <div className='text-2xl sm:text-3xl font-bold text-orange-600 mb-1'>
+          {/* Streak */}
+          <div className='bg-linear-to-br from-orange-50 to-red-50 rounded-xl sm:rounded-2xl p-2 sm:p-3 md:p-4 border border-orange-200'>
+            <div className='text-lg sm:text-2xl md:text-3xl mb-0.5 sm:mb-1'>
+              🔥
+            </div>
+            <div className='text-base sm:text-lg md:text-xl font-bold text-orange-600'>
               {stats.streak}
             </div>
-            <div className='text-xs sm:text-sm text-gray-600'>Streak</div>
+            <div className='text-[10px] sm:text-xs text-gray-600'>Streak</div>
           </div>
         </div>
 
         {/* Badges */}
         {stats.badges && stats.badges.length > 0 && (
-          <div className='mb-8'>
-            <h3 className='text-base sm:text-lg font-bold text-gray-700 mb-4'>
+          <div className='mb-4 sm:mb-6'>
+            <h3 className='text-sm sm:text-base font-bold text-gray-700 mb-2 sm:mb-3'>
               Unlocked Badges! 🏆
             </h3>
-            <div className='flex justify-center gap-3 sm:gap-4 flex-wrap'>
+            <div className='flex justify-center gap-2 sm:gap-3 flex-wrap'>
               {stats.badges.map((badge, idx) => (
                 <motion.div
                   key={idx}
@@ -304,10 +347,12 @@ export const CompletionCelebration = ({ stats, onContinue }) => {
                     stiffness: 200,
                     damping: 15,
                   }}
-                  className='bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-2xl p-3 sm:p-4 border-2 border-yellow-400'
+                  className='bg-linear-to-br from-yellow-100 to-yellow-200 rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 border-yellow-400 min-w-18 sm:min-w-21.25'
                 >
-                  <div className='text-3xl sm:text-4xl mb-2'>{badge.icon}</div>
-                  <div className='text-[10px] sm:text-xs font-semibold text-gray-700'>
+                  <div className='text-xl sm:text-2xl md:text-3xl mb-0.5 sm:mb-1'>
+                    {badge.icon}
+                  </div>
+                  <div className='text-[9px] sm:text-[10px] md:text-xs font-semibold text-gray-700 leading-tight'>
                     {badge.name}
                   </div>
                 </motion.div>
@@ -321,7 +366,7 @@ export const CompletionCelebration = ({ stats, onContinue }) => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onContinue}
-          className='px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-lg sm:text-xl shadow-2xl w-full sm:w-auto'
+          className='w-full px-6 sm:px-8 py-3 sm:py-4 bg-linear-to-r from-emerald-600 to-teal-600 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-shadow'
         >
           Continue! 🚀
         </motion.button>
@@ -339,7 +384,7 @@ const FUN_CONTENT = [
   {
     icon: '🎯',
     title: 'Fun Fact!',
-    text: 'Bill Gates làm bài test tính cách mỗi năm để tự nhận thức',
+    text: 'Bill Gates làm bài test tính cách mỗi năm!',
   },
   {
     icon: '🚀',
@@ -359,12 +404,12 @@ const FUN_CONTENT = [
   {
     icon: '💪',
     title: 'Motivation!',
-    text: 'Mỗi câu trả lời giúp bạn hiểu mình hơn một chút!',
+    text: 'Mỗi câu trả lời giúp bạn hiểu mình hơn!',
   },
   {
     icon: '🎨',
     title: 'Fun Fact!',
-    text: 'Tính cách có thể thay đổi theo thời gian và kinh nghiệm!',
+    text: 'Tính cách có thể thay đổi theo thời gian!',
   },
   {
     icon: '⚡',
@@ -384,6 +429,7 @@ const FUN_CONTENT = [
 ];
 
 export const FunInterlude = ({ onContinue }) => {
+  // eslint-disable-next-line react-hooks/purity
   const content = FUN_CONTENT[Math.floor(Math.random() * FUN_CONTENT.length)];
 
   useEffect(() => {
@@ -399,12 +445,12 @@ export const FunInterlude = ({ onContinue }) => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className='fixed inset-0 flex items-center justify-center z-40 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 backdrop-blur-sm p-4'
+      className='fixed inset-0 flex items-center justify-center z-40 bg-linear-to-br from-emerald-50/50 to-teal-50/50 backdrop-blur-sm p-4'
     >
       <motion.div
         initial={{ y: 20 }}
         animate={{ y: 0 }}
-        className='bg-white rounded-3xl p-8 sm:p-12 max-w-lg w-full text-center shadow-2xl border-2 border-emerald-200'
+        className='bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 max-w-lg w-full text-center shadow-2xl border-2 border-emerald-200'
       >
         <motion.div
           animate={{
@@ -412,16 +458,16 @@ export const FunInterlude = ({ onContinue }) => {
             scale: [1, 1.1, 1],
           }}
           transition={{ duration: 0.6, repeat: 1 }}
-          className='text-6xl sm:text-8xl mb-6'
+          className='text-5xl sm:text-6xl md:text-8xl mb-4 sm:mb-6'
         >
           {content.icon}
         </motion.div>
 
-        <h3 className='text-xl sm:text-2xl font-bold text-emerald-600 mb-3'>
+        <h3 className='text-lg sm:text-xl md:text-2xl font-bold text-emerald-600 mb-2 sm:mb-3'>
           {content.title}
         </h3>
 
-        <p className='text-base sm:text-lg text-gray-700 mb-6'>
+        <p className='text-sm sm:text-base md:text-lg text-gray-700 mb-4 sm:mb-6'>
           {content.text}
         </p>
 
@@ -445,7 +491,7 @@ export const FunInterlude = ({ onContinue }) => {
 
         <button
           onClick={onContinue}
-          className='mt-6 text-sm text-gray-500 hover:text-gray-700 transition-colors'
+          className='mt-4 sm:mt-6 text-xs sm:text-sm text-gray-500 hover:text-gray-700 transition-colors'
         >
           Skip →
         </button>

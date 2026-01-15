@@ -47,9 +47,9 @@ function TestFlow() {
   };
 
   return (
-    <div className='h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden'>
+    <div className='h-screen flex flex-col bg-linear-to-br from-gray-50 to-gray-100 overflow-hidden'>
       {/* Top Navigation Bar - Fixed height */}
-      <nav className='flex-shrink-0 bg-white border-b border-gray-200 shadow-sm'>
+      <nav className='shrink-0 bg-white border-b border-gray-200 shadow-sm'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex items-center justify-between h-16'>
             {/* Logo */}
@@ -82,7 +82,7 @@ function TestFlow() {
               </span>
               <div className='w-48 h-2 bg-gray-200 rounded-full overflow-hidden'>
                 <motion.div
-                  className='h-full bg-gradient-to-r from-emerald-500 to-teal-500'
+                  className='h-full bg-linear-to-r from-emerald-500 to-teal-500'
                   initial={false}
                   animate={{ width: `${overallProgress}%` }}
                   transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -94,7 +94,7 @@ function TestFlow() {
             </div>
 
             {/* Current Module Info */}
-            <div className='flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-2 rounded-full border border-emerald-200'>
+            <div className='flex items-center gap-2 bg-linear-to-r from-emerald-50 to-teal-50 px-4 py-2 rounded-full border border-emerald-200'>
               <span className='text-2xl'>{currentModuleInfo?.icon}</span>
               <span className='text-sm font-semibold text-gray-900 hidden sm:block'>
                 {currentModuleInfo?.name}
@@ -105,7 +105,7 @@ function TestFlow() {
       </nav>
 
       {/* Module Progress Stepper */}
-      <div className='flex-shrink-0 bg-white border-b border-gray-200'>
+      <div className='shrink-0 bg-white border-b border-gray-200'>
         <div className='max-w-7xl mx-auto px-4 py-3'>
           {/* Desktop - Full horizontal view */}
           <div className='hidden md:flex items-center justify-center gap-2'>
@@ -180,7 +180,7 @@ function TestFlow() {
                       <motion.div
                         animate={{ scale: [1, 1.05, 1] }}
                         transition={{ duration: 0.5 }}
-                        className='w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-2xl text-white shadow-lg border-2 border-white'
+                        className='w-16 h-16 rounded-full bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-2xl text-white shadow-lg border-2 border-white'
                       >
                         {currentModuleInfo?.icon}
                       </motion.div>
@@ -284,7 +284,7 @@ function TestFlow() {
                 </button>
                 <button
                   onClick={confirmExit}
-                  className='flex-1 py-3 px-6 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all'
+                  className='flex-1 py-3 px-6 bg-linear-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all'
                 >
                   Thoát
                 </button>

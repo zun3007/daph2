@@ -52,6 +52,9 @@ export const TestProvider = ({ children }) => {
     totalQuestions: 106,
   });
 
+  // Module progress - track current question index per module
+  const [moduleProgress, setModuleProgress] = useState({});
+
   // Use static modules config
   const modules = MODULES;
 
@@ -74,6 +77,7 @@ export const TestProvider = ({ children }) => {
             completedModules: [],
           }
         );
+        setModuleProgress(session.moduleProgress || {});
       } catch (error) {
         console.error('Error loading session:', error);
         // Create new session if corrupted
@@ -93,20 +97,24 @@ export const TestProvider = ({ children }) => {
   }, []); // No dependencies - only run once
 
   // Save session to localStorage (memoized)
-  const saveSession = useCallback((sid, module, answersData, progressData) => {
-    try {
-      const session = {
-        sessionId: sid,
-        currentModule: module,
-        answers: answersData,
-        progress: progressData,
-        lastUpdated: new Date().toISOString(),
-      };
-      localStorage.setItem('daph2_session', JSON.stringify(session));
-    } catch (error) {
-      console.error('Error saving session:', error);
-    }
-  }, []); // No dependencies - function doesn't depend on external state
+  const saveSession = useCallback(
+    (sid, module, answersData, progressData, moduleProgressData) => {
+      try {
+        const session = {
+          sessionId: sid,
+          currentModule: module,
+          answers: answersData,
+          progress: progressData,
+          moduleProgress: moduleProgressData,
+          lastUpdated: new Date().toISOString(),
+        };
+        localStorage.setItem('daph2_session', JSON.stringify(session));
+      } catch (error) {
+        console.error('Error saving session:', error);
+      }
+    },
+    []
+  );
 
   // Auto-save on changes (debounced to prevent too many writes)
   useEffect(() => {
@@ -118,11 +126,18 @@ export const TestProvider = ({ children }) => {
 
     // Debounce save to prevent infinite loops
     const timeoutId = setTimeout(() => {
-      saveSession(sessionId, currentModule, answers, progress);
+      saveSession(sessionId, currentModule, answers, progress, moduleProgress);
     }, 100); // 100ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [sessionId, currentModule, answers, progress, saveSession]);
+  }, [
+    sessionId,
+    currentModule,
+    answers,
+    progress,
+    moduleProgress,
+    saveSession,
+  ]);
 
   // Save answer for a question
   const saveAnswer = useCallback((moduleId, questionId, answer) => {
@@ -243,6 +258,21 @@ export const TestProvider = ({ children }) => {
     );
   }, [progress.answeredQuestions, progress.totalQuestions]);
 
+  // Module progress helpers
+  const setModuleQuestionIndex = useCallback((moduleId, questionIndex) => {
+    setModuleProgress((prev) => ({
+      ...prev,
+      [moduleId]: questionIndex,
+    }));
+  }, []);
+
+  const getModuleQuestionIndex = useCallback(
+    (moduleId) => {
+      return moduleProgress[moduleId] || 0;
+    },
+    [moduleProgress]
+  );
+
   const value = {
     // State
     sessionId,
@@ -250,6 +280,7 @@ export const TestProvider = ({ children }) => {
     answers,
     progress,
     modules,
+    moduleProgress,
 
     // Actions
     saveAnswer,
@@ -263,6 +294,8 @@ export const TestProvider = ({ children }) => {
     getCurrentModuleInfo,
     isModuleCompleted,
     getProgressPercentage,
+    setModuleQuestionIndex,
+    getModuleQuestionIndex,
   };
 
   return <TestContext.Provider value={value}>{children}</TestContext.Provider>;
