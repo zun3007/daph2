@@ -5,10 +5,7 @@ const ScrollIndicator = () => {
   return (
     <motion.div
       onClick={() => {
-        document.getElementById('problem').scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
+        window.goToSlide(1);
       }}
       animate={{ y: [0, 8, 0] }}
       transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}

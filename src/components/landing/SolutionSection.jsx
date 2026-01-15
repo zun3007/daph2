@@ -244,10 +244,7 @@ const SolutionSection = () => {
             >
               <motion.button
                 onClick={() => {
-                  document.getElementById('how-it-works').scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center',
-                  });
+                  window.goToSlide(3);
                 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

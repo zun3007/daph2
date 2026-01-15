@@ -101,10 +101,7 @@ const HeroSection = () => {
 
             <motion.button
               onClick={() => {
-                document.getElementById('problem').scrollIntoView({
-                  behavior: 'smooth',
-                  block: 'center',
-                });
+                window.goToSlide(1);
               }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
