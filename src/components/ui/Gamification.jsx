@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 
 // ============================================
-// GAMIFICATION WRAPPER
+// GAMIFICATION WRAPPER - FULL SCREEN FIT
 // ============================================
 
 // Static milestone configuration
@@ -51,17 +51,16 @@ export const GameWrapper = ({
     );
 
     if (milestone) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowMilestone(milestone);
       triggerConfetti();
 
       setTimeout(() => {
         setShowMilestone(null);
-      }, 2000); // Reduced to 2s
+      }, 2000);
     }
   }, [progress, currentQuestion]);
 
-  // Completion - only call once when reaching 100%
+  // Completion
   useEffect(() => {
     if (
       currentQuestion === totalQuestions &&
@@ -84,79 +83,83 @@ export const GameWrapper = ({
   };
 
   return (
-    <div className='min-h-screen bg-linear-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4'>
-      {/* Top Bar */}
-      <div className='max-w-4xl mx-auto mb-6'>
-        <div className='bg-white rounded-2xl shadow-lg p-4'>
-          {/* Progress Bar */}
-          <div className='mb-3'>
-            <div className='flex justify-between items-center mb-2'>
-              <span className='text-sm font-semibold text-gray-700'>
-                Câu {currentQuestion}/{totalQuestions}
-              </span>
-              <span className='text-sm font-bold text-emerald-600'>
-                {progress}%
-              </span>
-            </div>
-
-            <div className='relative h-3 bg-gray-200 rounded-full overflow-hidden'>
-              <motion.div
-                className='absolute inset-y-0 left-0 bg-linear-to-r from-emerald-500 to-teal-500 rounded-full'
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-              />
-
-              {/* Milestone markers */}
-              {MILESTONES.map((m) => (
-                <div
-                  key={m.at}
-                  className={`absolute top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full ${
-                    progress >= m.at
-                      ? 'bg-white border-2 border-emerald-600'
-                      : 'bg-gray-300'
-                  }`}
-                  style={{ left: `${m.at}%`, marginLeft: '-8px' }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className='flex items-center justify-between text-sm'>
-            {/* Time */}
-            <div className='flex items-center gap-2'>
-              <span className='text-blue-500'>⏱️</span>
-              <span className='font-semibold text-gray-700'>
-                {formatTime(totalTime)}
-              </span>
-            </div>
-
-            {/* Speed indicator */}
-            {totalTime > 0 && currentQuestion > 0 && (
-              <div className='flex items-center gap-2'>
-                <span className='text-purple-500'>⚡</span>
-                <span className='font-semibold text-gray-700'>
-                  {Math.round(currentQuestion / (totalTime / 60))}/min
+    <div className='h-full flex flex-col bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50'>
+      {/* Top Stats Bar - Compact */}
+      <div className='flex-shrink-0 px-4 pt-4 pb-3'>
+        <div className='max-w-4xl mx-auto'>
+          <div className='bg-white rounded-2xl shadow-lg p-3 sm:p-4'>
+            {/* Progress Bar */}
+            <div className='mb-2'>
+              <div className='flex justify-between items-center mb-1.5'>
+                <span className='text-xs sm:text-sm font-semibold text-gray-700'>
+                  Câu {currentQuestion}/{totalQuestions}
+                </span>
+                <span className='text-xs sm:text-sm font-bold text-emerald-600'>
+                  {progress}%
                 </span>
               </div>
-            )}
+
+              <div className='relative h-2.5 sm:h-3 bg-gray-200 rounded-full overflow-hidden'>
+                <motion.div
+                  className='absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full'
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                />
+
+                {/* Milestone markers */}
+                {MILESTONES.map((m) => (
+                  <div
+                    key={m.at}
+                    className={`absolute top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 rounded-full ${
+                      progress >= m.at
+                        ? 'bg-white border-2 border-emerald-600'
+                        : 'bg-gray-300'
+                    }`}
+                    style={{ left: `${m.at}%`, marginLeft: '-6px' }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className='flex items-center justify-between text-xs sm:text-sm'>
+              {/* Time */}
+              <div className='flex items-center gap-1.5 sm:gap-2'>
+                <span className='text-blue-500'>⏱️</span>
+                <span className='font-semibold text-gray-700'>
+                  {formatTime(totalTime)}
+                </span>
+              </div>
+
+              {/* Speed indicator */}
+              {totalTime > 0 && currentQuestion > 0 && (
+                <div className='flex items-center gap-1.5 sm:gap-2'>
+                  <span className='text-purple-500'>⚡</span>
+                  <span className='font-semibold text-gray-700'>
+                    {Math.round(currentQuestion / (totalTime / 60))}/min
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Question Content */}
-      <div className='max-w-4xl mx-auto'>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className='bg-white rounded-3xl shadow-2xl p-8 md:p-12 min-h-125 flex items-center justify-center'
-        >
-          {children}
-        </motion.div>
+      {/* Question Content - Fills remaining space */}
+      <div className='flex-1 overflow-y-auto px-4 pb-4'>
+        <div className='max-w-4xl mx-auto h-full'>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className='bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 h-full flex items-center justify-center'
+          >
+            {children}
+          </motion.div>
+        </div>
       </div>
 
-      {/* Milestone Celebration - Compact Notification (NO MORE BLOCKING!) */}
+      {/* Milestone Celebration - Compact Notification */}
       <AnimatePresence>
         {showMilestone && (
           <motion.div
@@ -168,93 +171,28 @@ export const GameWrapper = ({
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 0.5 }}
-              className='bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-2xl px-8 py-4 shadow-2xl border-2 border-white flex items-center gap-3'
+              className='bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl px-6 sm:px-8 py-3 sm:py-4 shadow-2xl border-2 border-white flex items-center gap-2 sm:gap-3'
             >
               <motion.span
                 animate={{ rotate: [0, 360] }}
                 transition={{ duration: 0.6 }}
-                className='text-4xl'
+                className='text-3xl sm:text-4xl'
               >
                 {showMilestone.icon}
               </motion.span>
               <div>
-                <p className='text-xl font-bold'>{showMilestone.label}</p>
-                <p className='text-sm text-emerald-100'>Keep going! 💪</p>
+                <p className='text-lg sm:text-xl font-bold'>
+                  {showMilestone.label}
+                </p>
+                <p className='text-xs sm:text-sm text-emerald-100'>
+                  Keep going! 💪
+                </p>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
-  );
-};
-
-// ============================================
-// PROGRESS INDICATOR COMPONENT
-// ============================================
-
-export const ProgressIndicator = ({ current, total, module }) => {
-  const progress = Math.round((current / total) * 100);
-
-  return (
-    <div className='sticky top-4 z-40'>
-      <div className='bg-white rounded-xl shadow-lg p-3'>
-        <div className='flex items-center gap-3'>
-          {/* Module Icon */}
-          <div className='text-3xl'>{module.icon}</div>
-
-          {/* Progress Info */}
-          <div className='flex-1'>
-            <div className='flex justify-between items-center mb-1'>
-              <span className='text-xs font-semibold text-gray-600'>
-                {module.name}
-              </span>
-              <span className='text-xs font-bold text-emerald-600'>
-                {current}/{total}
-              </span>
-            </div>
-
-            <div className='h-2 bg-gray-200 rounded-full overflow-hidden'>
-              <motion.div
-                className='h-full bg-linear-to-r from-emerald-500 to-teal-500'
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.3 }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ============================================
-// STREAK COUNTER
-// ============================================
-
-export const StreakCounter = ({ streak }) => {
-  return (
-    <motion.div
-      initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      className='fixed bottom-8 right-8 bg-linear-to-r from-orange-500 to-red-500 text-white rounded-full px-6 py-3 shadow-xl flex items-center gap-2'
-    >
-      <motion.span
-        animate={{
-          rotate: [0, -10, 10, -10, 0],
-          scale: [1, 1.2, 1],
-        }}
-        transition={{ duration: 0.5 }}
-        className='text-2xl'
-      >
-        🔥
-      </motion.span>
-      <div>
-        <div className='text-2xl font-bold'>{streak}</div>
-        <div className='text-xs'>Streak!</div>
-      </div>
-    </motion.div>
   );
 };
 
@@ -301,60 +239,60 @@ export const CompletionCelebration = ({ stats, onContinue }) => {
         initial={{ scale: 0.8, y: 50 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: 'spring', duration: 0.5 }}
-        className='bg-white rounded-3xl p-12 max-w-2xl w-full text-center'
+        className='bg-white rounded-3xl p-8 sm:p-12 max-w-2xl w-full text-center max-h-[90vh] overflow-y-auto'
       >
         {/* Icon */}
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', duration: 0.5 }}
-          className='text-9xl mb-6'
+          className='text-7xl sm:text-9xl mb-6'
         >
           🎉
         </motion.div>
 
         {/* Title */}
-        <h1 className='text-5xl font-bold text-gray-900 mb-4'>
+        <h1 className='text-3xl sm:text-5xl font-bold text-gray-900 mb-4'>
           Module Complete!
         </h1>
-        <p className='text-xl text-gray-600 mb-8'>
+        <p className='text-lg sm:text-xl text-gray-600 mb-8'>
           Amazing work! You're making great progress! 🚀
         </p>
 
         {/* Stats */}
-        <div className='grid grid-cols-3 gap-6 mb-8'>
-          <div className='bg-linear-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-200'>
-            <div className='text-4xl mb-2'>⏱️</div>
-            <div className='text-3xl font-bold text-emerald-600 mb-1'>
+        <div className='grid grid-cols-3 gap-3 sm:gap-6 mb-8'>
+          <div className='bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 sm:p-6 border border-emerald-200'>
+            <div className='text-3xl sm:text-4xl mb-2'>⏱️</div>
+            <div className='text-2xl sm:text-3xl font-bold text-emerald-600 mb-1'>
               {stats.time}
             </div>
-            <div className='text-sm text-gray-600'>Time</div>
+            <div className='text-xs sm:text-sm text-gray-600'>Time</div>
           </div>
 
-          <div className='bg-linear-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200'>
-            <div className='text-4xl mb-2'>⚡</div>
-            <div className='text-3xl font-bold text-blue-600 mb-1'>
+          <div className='bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-4 sm:p-6 border border-blue-200'>
+            <div className='text-3xl sm:text-4xl mb-2'>⚡</div>
+            <div className='text-2xl sm:text-3xl font-bold text-blue-600 mb-1'>
               {stats.speed}
             </div>
-            <div className='text-sm text-gray-600'>Speed</div>
+            <div className='text-xs sm:text-sm text-gray-600'>Speed</div>
           </div>
 
-          <div className='bg-linear-to-br from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-200'>
-            <div className='text-4xl mb-2'>🔥</div>
-            <div className='text-3xl font-bold text-orange-600 mb-1'>
+          <div className='bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-4 sm:p-6 border border-orange-200'>
+            <div className='text-3xl sm:text-4xl mb-2'>🔥</div>
+            <div className='text-2xl sm:text-3xl font-bold text-orange-600 mb-1'>
               {stats.streak}
             </div>
-            <div className='text-sm text-gray-600'>Max Streak</div>
+            <div className='text-xs sm:text-sm text-gray-600'>Streak</div>
           </div>
         </div>
 
         {/* Badges */}
         {stats.badges && stats.badges.length > 0 && (
           <div className='mb-8'>
-            <h3 className='text-lg font-bold text-gray-700 mb-4'>
+            <h3 className='text-base sm:text-lg font-bold text-gray-700 mb-4'>
               Unlocked Badges! 🏆
             </h3>
-            <div className='flex justify-center gap-4'>
+            <div className='flex justify-center gap-3 sm:gap-4 flex-wrap'>
               {stats.badges.map((badge, idx) => (
                 <motion.div
                   key={idx}
@@ -366,10 +304,10 @@ export const CompletionCelebration = ({ stats, onContinue }) => {
                     stiffness: 200,
                     damping: 15,
                   }}
-                  className='bg-linear-to-br from-yellow-100 to-yellow-200 rounded-2xl p-4 border-2 border-yellow-400'
+                  className='bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-2xl p-3 sm:p-4 border-2 border-yellow-400'
                 >
-                  <div className='text-4xl mb-2'>{badge.icon}</div>
-                  <div className='text-xs font-semibold text-gray-700'>
+                  <div className='text-3xl sm:text-4xl mb-2'>{badge.icon}</div>
+                  <div className='text-[10px] sm:text-xs font-semibold text-gray-700'>
                     {badge.name}
                   </div>
                 </motion.div>
@@ -383,7 +321,7 @@ export const CompletionCelebration = ({ stats, onContinue }) => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onContinue}
-          className='px-12 py-5 bg-linear-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-xl shadow-2xl'
+          className='px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-lg sm:text-xl shadow-2xl w-full sm:w-auto'
         >
           Continue! 🚀
         </motion.button>
@@ -394,7 +332,6 @@ export const CompletionCelebration = ({ stats, onContinue }) => {
 
 // ============================================
 // FUN INTERLUDE COMPONENT
-// Show tips/facts between questions (every 5 questions)
 // ============================================
 
 const FUN_CONTENT = [
@@ -447,11 +384,8 @@ const FUN_CONTENT = [
 ];
 
 export const FunInterlude = ({ onContinue }) => {
-  // Pick random content
-  // eslint-disable-next-line react-hooks/purity
   const content = FUN_CONTENT[Math.floor(Math.random() * FUN_CONTENT.length)];
 
-  // Auto-continue after 3 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       onContinue();
@@ -465,34 +399,32 @@ export const FunInterlude = ({ onContinue }) => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className='fixed inset-0 flex items-center justify-center z-40 bg-linear-to-br from-emerald-50/50 to-teal-50/50 backdrop-blur-sm'
+      className='fixed inset-0 flex items-center justify-center z-40 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 backdrop-blur-sm p-4'
     >
       <motion.div
         initial={{ y: 20 }}
         animate={{ y: 0 }}
-        className='bg-white rounded-3xl p-12 max-w-lg text-center shadow-2xl border-2 border-emerald-200'
+        className='bg-white rounded-3xl p-8 sm:p-12 max-w-lg w-full text-center shadow-2xl border-2 border-emerald-200'
       >
-        {/* Icon */}
         <motion.div
           animate={{
             rotate: [0, -10, 10, -10, 0],
             scale: [1, 1.1, 1],
           }}
           transition={{ duration: 0.6, repeat: 1 }}
-          className='text-8xl mb-6'
+          className='text-6xl sm:text-8xl mb-6'
         >
           {content.icon}
         </motion.div>
 
-        {/* Title */}
-        <h3 className='text-2xl font-bold text-emerald-600 mb-3'>
+        <h3 className='text-xl sm:text-2xl font-bold text-emerald-600 mb-3'>
           {content.title}
         </h3>
 
-        {/* Text */}
-        <p className='text-lg text-gray-700 mb-6'>{content.text}</p>
+        <p className='text-base sm:text-lg text-gray-700 mb-6'>
+          {content.text}
+        </p>
 
-        {/* Progress indicator */}
         <div className='flex justify-center gap-1'>
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
@@ -511,7 +443,6 @@ export const FunInterlude = ({ onContinue }) => {
           />
         </div>
 
-        {/* Skip button */}
         <button
           onClick={onContinue}
           className='mt-6 text-sm text-gray-500 hover:text-gray-700 transition-colors'
@@ -525,8 +456,6 @@ export const FunInterlude = ({ onContinue }) => {
 
 export default {
   GameWrapper,
-  ProgressIndicator,
-  StreakCounter,
   CompletionCelebration,
   FunInterlude,
 };
