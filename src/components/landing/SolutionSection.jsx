@@ -1,6 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import ScrollIndicator from '../utils/ScrollIndicator';
 
 const SolutionSection = () => {
   const ref = useRef(null);
@@ -269,6 +270,7 @@ const SolutionSection = () => {
           </motion.div>
         </div>
       </div>
+      <ScrollIndicator index={2} />
     </section>
   );
 };

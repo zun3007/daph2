@@ -75,8 +75,8 @@ const HeroSection = () => {
             transition={{ delay: 0.5, duration: 0.8 }}
             className='text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed'
           >
-            Khám phá tài năng và định hướng tương lai của bạn thông qua phân
-            tích AI chuyên sâu, kết hợp khoa học tâm lý học hiện đại
+            Khám phá tài năng và định hướng tương lai của bạn thông qua <br />
+            phân tích AI chuyên sâu, kết hợp khoa học tâm lý học hiện đại
           </motion.p>
 
           <motion.div
@@ -163,7 +163,7 @@ const HeroSection = () => {
         </motion.div>
       </div>
 
-      <ScrollIndicator />
+      <ScrollIndicator index={0} />
     </motion.section>
   );
 };

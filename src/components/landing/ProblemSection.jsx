@@ -2,6 +2,7 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import SectionContainer from '../utils/SectionContainer';
+import ScrollIndicator from './../utils/ScrollIndicator';
 
 const ProblemSection = () => {
   const ref = useRef(null);
@@ -116,6 +117,7 @@ const ProblemSection = () => {
           </p>
         </motion.div>
       </div>
+      <ScrollIndicator index={1} />
     </SectionContainer>
   );
 };

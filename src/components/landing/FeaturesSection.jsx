@@ -2,6 +2,7 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import SectionContainer from '../utils/SectionContainer';
+import ScrollIndicator from '../utils/ScrollIndicator';
 
 const FeaturesSection = () => {
   const ref = useRef(null);
@@ -169,6 +170,7 @@ const FeaturesSection = () => {
           ))}
         </div>
       </div>
+      <ScrollIndicator index={4} />
     </SectionContainer>
   );
 };

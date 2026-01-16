@@ -3,6 +3,7 @@ import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import SectionContainer from '../utils/SectionContainer';
 import { useNavigate } from 'react-router-dom';
+import ScrollIndicator from '../utils/ScrollIndicator';
 
 const HowItWorksSection = () => {
   const navigate = useNavigate();
@@ -147,6 +148,7 @@ const HowItWorksSection = () => {
           </motion.button>
         </motion.div>
       </div>
+      <ScrollIndicator index={3} />
     </SectionContainer>
   );
 };
