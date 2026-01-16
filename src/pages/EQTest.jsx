@@ -7,7 +7,12 @@ import {
   GameWrapper,
   CompletionCelebration,
 } from '../components/ui/Gamification';
-import { EmojiQuestion, SliderQuestion } from '../components/ui/QuestionType';
+// ✅ FIX: Add SwipeQuestion to imports!
+import {
+  EmojiQuestion,
+  SliderQuestion,
+  SwipeQuestion,
+} from '../components/ui/QuestionType';
 
 // ============================================
 // EQ TEST MODULE
@@ -20,193 +25,76 @@ function EQTest() {
   const [showCompletion, setShowCompletion] = useState(false);
   const [startTime] = useState(Date.now());
 
-  // EQ Questions (15 questions)
+  // EQ Questions (5 questions)
   const questions = [
-    // Self-awareness (Emoji + Scenarios)
     {
       id: 'eq_001',
       type: 'emoji',
-      question: 'Bạn thường nhận ra cảm xúc của mình nhanh như thế nào?',
+      question:
+        'Khi ai đó chỉ trích ý kiến của bạn trong meeting, bạn cảm thấy:',
       options: [
-        { value: 1, icon: '😵', label: 'Rất khó' },
-        { value: 2, icon: '😕', label: 'Khó' },
-        { value: 3, icon: '😐', label: 'Trung bình' },
-        { value: 4, icon: '🤔', label: 'Khá nhanh' },
-        { value: 5, icon: '🎯', label: 'Rất nhanh' },
+        { value: 1, icon: '😤', label: 'Tức giận' },
+        { value: 2, icon: '😕', label: 'Bị tổn thương' },
+        { value: 3, icon: '🤔', label: 'Tò mò tại sao' },
+        { value: 4, icon: '😌', label: 'Bình tĩnh lắng nghe' },
+        { value: 5, icon: '🙏', label: 'Biết ơn feedback' },
       ],
     },
     {
       id: 'eq_002',
-      type: 'slider',
-      question: 'Bạn có thể điều khiển cảm xúc của mình khi giận dữ?',
-      min: 1,
-      max: 5,
-      labels: {
-        min: 'Rất khó 😤',
-        max: 'Dễ dàng 😌',
+      type: 'swipe',
+      question: 'Bạn thấy đồng nghiệp khóc ở góc văn phòng. Bạn:',
+      optionA: {
+        value: 'space',
+        label: '🚶 Cho họ không gian',
+        icon: '🚶',
+        description: 'Để họ tự xử lý cảm xúc',
+      },
+      optionB: {
+        value: 'approach',
+        label: '🤗 Đến hỏi thăm',
+        icon: '🤗',
+        description: 'Lắng nghe và hỗ trợ ngay',
       },
     },
-
-    // Empathy scenarios
     {
       id: 'eq_003',
-      type: 'scenario',
-      scenario: '💔 Bạn thấy đồng nghiệp khóc trong phòng meeting. Bạn:',
-      options: [
-        { value: 'approach', label: 'Đến hỏi thăm', icon: '🤗' },
-        { value: 'wait', label: 'Đợi họ bình tĩnh rồi hỏi', icon: '⏰' },
-        { value: 'text', label: 'Nhắn tin hỏi', icon: '💬' },
-        { value: 'space', label: 'Cho họ không gian riêng', icon: '🚶' },
-      ],
-    },
-    {
-      id: 'eq_004',
-      type: 'emoji',
-      question: 'Khi ai đó chia sẻ vấn đề với bạn, bạn thường:',
-      options: [
-        { value: 1, icon: '🤷', label: 'Không biết làm gì' },
-        { value: 2, icon: '💡', label: 'Đưa giải pháp' },
-        { value: 3, icon: '👂', label: 'Lắng nghe' },
-        { value: 4, icon: '❤️', label: 'Thấu hiểu' },
-        { value: 5, icon: '🤝', label: 'Cảm nhận như họ' },
-      ],
-    },
-
-    // Social Skills
-    {
-      id: 'eq_005',
       type: 'slider',
-      question: 'Bạn có dễ dàng đọc được cảm xúc người khác qua nét mặt?',
+      question: 'Bạn có dễ dàng nhận ra khi người khác không thoải mái?',
       min: 1,
       max: 5,
       labels: {
         min: 'Rất khó 😶',
-        max: 'Rất dễ 👀',
+        max: 'Rất dễ 👁️',
       },
     },
     {
-      id: 'eq_006',
-      type: 'scenario',
-      scenario:
-        '🎭 Trong buổi gặp mặt, bạn cảm thấy ai đó không thoải mái. Bạn:',
-      options: [
-        { value: 'ask', label: 'Hỏi thẳng họ', icon: '🗣️' },
-        { value: 'change_topic', label: 'Đổi chủ đề', icon: '💬' },
-        { value: 'include', label: 'Tìm cách để họ tham gia', icon: '🤝' },
-        { value: 'nothing', label: 'Không làm gì', icon: '😐' },
-      ],
-    },
-
-    // Relationship Management
-    {
-      id: 'eq_007',
+      id: 'eq_004',
       type: 'emoji',
-      question: 'Khi xung đột xảy ra, bạn cảm thấy:',
+      question: 'Khi giận dữ, bạn thường kiểm soát cảm xúc như thế nào?',
       options: [
-        { value: 1, icon: '😰', label: 'Rất stress' },
-        { value: 2, icon: '😟', label: 'Không thoải mái' },
-        { value: 3, icon: '😐', label: 'Bình thường' },
-        { value: 4, icon: '🤔', label: 'Cơ hội giải quyết' },
-        { value: 5, icon: '💪', label: 'Tự tin xử lý' },
+        { value: 1, icon: '💥', label: 'Bùng nổ luôn' },
+        { value: 2, icon: '😤', label: 'Khó kiềm chế' },
+        { value: 3, icon: '😐', label: 'Cố gắng bình tĩnh' },
+        { value: 4, icon: '😌', label: 'Dễ dàng điều chỉnh' },
+        { value: 5, icon: '🧘', label: 'Luôn kiểm soát tốt' },
       ],
     },
     {
-      id: 'eq_008',
-      type: 'scenario',
-      scenario: '🤝 Hai bạn trong nhóm đang tranh cãi gay gắt. Bạn:',
-      options: [
-        { value: 'stay_out', label: 'Không can thiệp', icon: '🤷' },
-        { value: 'take_side', label: 'Ủng hộ người đúng', icon: '⚖️' },
-        { value: 'mediate', label: 'Hòa giải', icon: '🤝' },
-        { value: 'separate', label: 'Tách họ ra', icon: '🚪' },
-      ],
-    },
-
-    // Self-motivation
-    {
-      id: 'eq_009',
-      type: 'slider',
-      question: 'Bạn có dễ dàng tự động viên bản thân khi thất bại?',
-      min: 1,
-      max: 5,
-      labels: {
-        min: 'Rất khó 😞',
-        max: 'Rất dễ 💪',
+      id: 'eq_005',
+      type: 'swipe',
+      question: 'Ai đó vô tình làm bạn tổn thương. Bạn:',
+      optionA: {
+        value: 'confront',
+        label: '💬 Nói thẳng ngay',
+        icon: '💬',
+        description: 'Giải quyết vấn đề trực tiếp',
       },
-    },
-    {
-      id: 'eq_010',
-      type: 'emoji',
-      question: 'Khi ai đó phê bình bạn, phản ứng của bạn:',
-      options: [
-        { value: 1, icon: '😡', label: 'Tức giận' },
-        { value: 2, icon: '😔', label: 'Buồn/tổn thương' },
-        { value: 3, icon: '😐', label: 'Chấp nhận' },
-        { value: 4, icon: '🤔', label: 'Suy nghĩ xem đúng không' },
-        { value: 5, icon: '🙏', label: 'Biết ơn góp ý' },
-      ],
-    },
-
-    // Advanced EQ
-    {
-      id: 'eq_011',
-      type: 'scenario',
-      scenario:
-        '🎯 Bạn thấy leader đang stress và đưa ra quyết định vội vàng. Bạn:',
-      options: [
-        { value: 'nothing', label: 'Leader tự biết', icon: '🤷' },
-        { value: 'ask_time', label: 'Đề nghị thêm thời gian', icon: '⏰' },
-        { value: 'voice_concern', label: 'Nói lo ngại', icon: '🗣️' },
-        { value: 'support_later', label: 'Hỗ trợ sau quyết định', icon: '🤝' },
-      ],
-    },
-    {
-      id: 'eq_012',
-      type: 'slider',
-      question: 'Bạn có thể cảm nhận được không khí trong phòng khi bước vào?',
-      min: 1,
-      max: 5,
-      labels: {
-        min: 'Không 😶',
-        max: 'Rất rõ 🎭',
-      },
-    },
-
-    // Emotional Expression
-    {
-      id: 'eq_013',
-      type: 'emoji',
-      question: 'Bạn dễ dàng bày tỏ cảm xúc của mình với người khác?',
-      options: [
-        { value: 1, icon: '🔒', label: 'Rất khó' },
-        { value: 2, icon: '😶', label: 'Khó' },
-        { value: 3, icon: '😐', label: 'Trung bình' },
-        { value: 4, icon: '😊', label: 'Khá dễ' },
-        { value: 5, icon: '🤗', label: 'Rất dễ' },
-      ],
-    },
-    {
-      id: 'eq_014',
-      type: 'scenario',
-      scenario: '💝 Ai đó làm điều tử tế cho bạn. Bạn:',
-      options: [
-        { value: 'smile', label: 'Mím cười', icon: '😊' },
-        { value: 'thank', label: 'Cảm ơn', icon: '🙏' },
-        { value: 'express', label: 'Bày tỏ rõ cảm xúc', icon: '💖' },
-        { value: 'return', label: 'Tìm cách đáp lại', icon: '🎁' },
-      ],
-    },
-
-    // Final question
-    {
-      id: 'eq_015',
-      type: 'slider',
-      question: 'Sau khi nói chuyện với bạn, người ta thường cảm thấy:',
-      min: 1,
-      max: 5,
-      labels: {
-        min: 'Như cũ 😐',
-        max: 'Tốt hơn 😊',
+      optionB: {
+        value: 'process',
+        label: '🤔 Suy nghĩ trước',
+        icon: '🤔',
+        description: 'Xử lý cảm xúc rồi mới nói',
       },
     },
   ];
@@ -255,7 +143,19 @@ function EQTest() {
       );
     }
 
-    // Scenario
+    // ✅ FIX: Add SwipeQuestion case!
+    if (q.type === 'swipe') {
+      return (
+        <SwipeQuestion
+          question={q.question}
+          optionA={q.optionA}
+          optionB={q.optionB}
+          onAnswer={handleAnswer}
+        />
+      );
+    }
+
+    // Scenario (if needed later)
     if (q.type === 'scenario') {
       return (
         <div className='text-center max-w-3xl mx-auto'>
@@ -325,7 +225,7 @@ function EQTest() {
               .toFixed(0)
               .padStart(2, '0')}`,
             speed: 'Thoughtful',
-            streak: 9,
+            streak: 5,
             badges: [
               { icon: '💝', name: 'Empathy Expert' },
               { icon: '🎭', name: 'Emotion Reader' },

@@ -1,12 +1,12 @@
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================
-// QUESTION TYPE COMPONENTS
+// QUESTION TYPE COMPONENTS - FIXED VERSION
 // ============================================
 
-// 1. EMOJI REACTION (Fastest, most engaging!)
+// 1. EMOJI REACTION - ✅ FIXED: Show labels under each emoji!
 export const EmojiQuestion = ({ question, options, onAnswer }) => {
   const [selected, setSelected] = useState(null);
 
@@ -24,41 +24,44 @@ export const EmojiQuestion = ({ question, options, onAnswer }) => {
 
   return (
     <div className='text-center'>
-      <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-8'>
+      <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-8 md:mb-12'>
         {question}
       </h2>
 
-      <div className='flex justify-center gap-4 flex-wrap'>
+      {/* ✅ FIXED: Grid layout with labels under each emoji */}
+      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 max-w-4xl mx-auto px-4'>
         {options.map((emoji) => (
           <motion.button
             key={emoji.value}
             onClick={() => handleSelect(emoji)}
-            className={`text-6xl md:text-7xl p-4 rounded-2xl transition-all ${
+            className={`flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4 rounded-2xl transition-all ${
               selected === emoji.value
-                ? 'bg-emerald-100 scale-110'
-                : 'hover:scale-110 hover:bg-gray-50'
+                ? 'bg-emerald-100 scale-105 shadow-lg'
+                : 'hover:scale-105 hover:bg-gray-50 bg-white border-2 border-gray-200'
             }`}
-            whileHover={{ scale: 1.1, rotate: 5 }}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            {emoji.icon}
+            {/* Emoji Icon */}
+            <div className='text-4xl md:text-5xl'>{emoji.icon}</div>
+
+            {/* ✅ Label Text */}
+            {emoji.label && (
+              <span className='text-xs md:text-sm font-semibold text-gray-700 text-center leading-tight'>
+                {emoji.label}
+              </span>
+            )}
           </motion.button>
         ))}
       </div>
-
-      {options[0].label && (
-        <div className='flex justify-between mt-6 text-sm text-gray-500 px-4'>
-          <span>{options[0].label}</span>
-          <span>{options[options.length - 1].label}</span>
-        </div>
-      )}
     </div>
   );
 };
 
-// 2. SWIPE CARDS (Tinder-style)
+// 2. SWIPE CARDS - ✅ REDESIGNED: Compact, clear, one at a time!
 export const SwipeQuestion = ({ question, optionA, optionB, onAnswer }) => {
   const [swipeDirection, setSwipeDirection] = useState(null);
+  const [dragOffset, setDragOffset] = useState(0);
 
   const handleSwipe = (direction, option) => {
     setSwipeDirection(direction);
@@ -66,146 +69,126 @@ export const SwipeQuestion = ({ question, optionA, optionB, onAnswer }) => {
 
     setTimeout(() => {
       onAnswer(option);
-    }, 400);
+    }, 350);
   };
 
+  // Determine which option is being chosen based on drag
+  const getActiveOption = () => {
+    if (dragOffset < -50) return 'left';
+    if (dragOffset > 50) return 'right';
+    return null;
+  };
+
+  const activeOption = getActiveOption();
+
   return (
-    <div className='text-center'>
-      <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-8'>
+    <div className='text-center px-4'>
+      <h2 className='text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8'>
         {question}
       </h2>
 
-      <div className='relative h-96 flex items-center justify-center'>
-        <motion.div
-          drag='x'
-          dragConstraints={{ left: 0, right: 0 }}
-          onDragEnd={(e, info) => {
-            if (info.offset.x > 100) {
-              handleSwipe('right', optionB.value);
-            } else if (info.offset.x < -100) {
-              handleSwipe('left', optionA.value);
-            }
-          }}
-          animate={
-            swipeDirection === 'left'
-              ? { x: -300, rotate: -20, opacity: 0 }
-              : swipeDirection === 'right'
-              ? { x: 300, rotate: 20, opacity: 0 }
-              : { x: 0, rotate: 0, opacity: 1 }
-          }
-          className='absolute bg-white rounded-3xl shadow-2xl p-8 w-80 h-80 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing border-4 border-gray-100'
+      {/* Compact buttons for all screens */}
+      <div className='max-w-lg mx-auto space-y-3'>
+        <motion.button
+          onClick={() => handleSwipe('left', optionA.value)}
+          whileHover={{ scale: 1.02, x: -5 }}
+          whileTap={{ scale: 0.98 }}
+          className='w-full flex items-center gap-3 p-4 bg-white rounded-xl shadow-md border-2 border-gray-200 hover:border-red-400 hover:shadow-lg transition-all group'
         >
-          <div className='text-6xl mb-4'>{optionA.icon}</div>
-          <h3 className='text-2xl font-bold text-gray-900 mb-2'>
-            {optionA.label}
-          </h3>
-          <p className='text-gray-600 text-center'>{optionA.description}</p>
-
-          <div className='absolute bottom-4 text-sm text-gray-400'>
-            ← Swipe để chọn →
+          <div className='text-3xl'>{optionA.icon}</div>
+          <div className='flex-1 text-left'>
+            <div className='text-base md:text-lg font-bold text-gray-900 group-hover:text-red-600 transition-colors'>
+              {optionA.label}
+            </div>
+            {optionA.description && (
+              <div className='text-xs md:text-sm text-gray-500 mt-0.5'>
+                {optionA.description}
+              </div>
+            )}
           </div>
-        </motion.div>
+          <div className='text-gray-400 group-hover:text-red-500 transition-colors'>
+            👈
+          </div>
+        </motion.button>
+
+        <div className='text-center py-2'>
+          <span className='text-xs text-gray-400 font-medium'>hoặc</span>
+        </div>
+
+        <motion.button
+          onClick={() => handleSwipe('right', optionB.value)}
+          whileHover={{ scale: 1.02, x: 5 }}
+          whileTap={{ scale: 0.98 }}
+          className='w-full flex items-center gap-3 p-4 bg-white rounded-xl shadow-md border-2 border-gray-200 hover:border-emerald-400 hover:shadow-lg transition-all group'
+        >
+          <div className='text-gray-400 group-hover:text-emerald-500 transition-colors'>
+            👉
+          </div>
+          <div className='flex-1 text-left'>
+            <div className='text-base md:text-lg font-bold text-gray-900 group-hover:text-emerald-600 transition-colors'>
+              {optionB.label}
+            </div>
+            {optionB.description && (
+              <div className='text-xs md:text-sm text-gray-500 mt-0.5'>
+                {optionB.description}
+              </div>
+            )}
+          </div>
+          <div className='text-3xl'>{optionB.icon}</div>
+        </motion.button>
       </div>
 
-      {/* Click buttons as alternative to swipe */}
-      <div className='flex gap-4 justify-center mt-8'>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => handleSwipe('left', optionA.value)}
-          className='px-8 py-4 bg-linear-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold shadow-lg'
-        >
-          {optionA.icon} {optionA.label}
-        </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => handleSwipe('right', optionB.value)}
-          className='px-8 py-4 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg'
-        >
-          {optionB.label} {optionB.icon}
-        </motion.button>
+      {/* Visual feedback hint */}
+      <div className='mt-6 text-xs text-gray-400'>
+        💡 Chọn option phù hợp với bạn nhất
       </div>
     </div>
   );
 };
 
-// 3. SLIDER SCALE
-export const SliderQuestion = ({
-  question,
-  min = 1,
-  max = 5,
-  labels,
-  onAnswer,
-}) => {
-  const [value, setValue] = useState(Math.ceil((min + max) / 2));
-  const [isDragging, setIsDragging] = useState(false);
+// 3. SLIDER QUESTION
+export const SliderQuestion = ({ question, min, max, labels, onAnswer }) => {
+  const [value, setValue] = useState(Math.floor((min + max) / 2));
 
-  const handleChange = (e) => {
-    setValue(parseInt(e.target.value));
-  };
-
-  const handleConfirm = () => {
-    if (navigator.vibrate) navigator.vibrate(15);
+  const handleSubmit = () => {
     onAnswer(value);
   };
 
   return (
-    <div className='text-center max-w-2xl mx-auto'>
+    <div className='text-center max-w-2xl mx-auto px-4'>
       <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-8'>
         {question}
       </h2>
 
       <div className='mb-8'>
-        {/* Current value display */}
-        <motion.div
-          animate={{ scale: isDragging ? 1.2 : 1 }}
-          className='text-7xl font-bold text-emerald-600 mb-4'
-        >
+        <div className='text-5xl md:text-6xl mb-4 font-bold text-emerald-600'>
           {value}
-        </motion.div>
+        </div>
 
-        {/* Slider */}
         <input
           type='range'
           min={min}
           max={max}
           value={value}
-          onChange={handleChange}
-          onMouseDown={() => setIsDragging(true)}
-          onMouseUp={() => setIsDragging(false)}
-          onTouchStart={() => setIsDragging(true)}
-          onTouchEnd={() => setIsDragging(false)}
-          className='w-full h-3 bg-linear-to-r from-red-200 via-yellow-200 to-emerald-200 rounded-full appearance-none cursor-pointer
-            [&::-webkit-slider-thumb]:appearance-none
-            [&::-webkit-slider-thumb]:w-8
-            [&::-webkit-slider-thumb]:h-8
-            [&::-webkit-slider-thumb]:bg-emerald-600
-            [&::-webkit-slider-thumb]:rounded-full
-            [&::-webkit-slider-thumb]:cursor-pointer
-            [&::-webkit-slider-thumb]:shadow-lg
-            [&::-webkit-slider-thumb]:transition-all
-            [&::-webkit-slider-thumb]:hover:scale-110'
+          onChange={(e) => setValue(parseInt(e.target.value))}
+          className='w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500'
         />
 
-        {/* Labels */}
         {labels && (
-          <div className='flex justify-between mt-4 text-sm text-gray-600 px-2'>
+          <div className='flex justify-between mt-4 text-sm md:text-base text-gray-600 font-medium'>
             <span>{labels.min}</span>
             <span>{labels.max}</span>
           </div>
         )}
       </div>
 
-      {/* Confirm button */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={handleConfirm}
-        className='px-12 py-4 bg-linear-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-lg shadow-lg'
+        onClick={handleSubmit}
+        className='px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg transition-colors'
       >
-        Xác Nhận
+        Tiếp theo →
       </motion.button>
     </div>
   );
@@ -230,40 +213,23 @@ export const ImageQuestion = ({ question, options, onAnswer }) => {
         {question}
       </h2>
 
-      <div className='grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl mx-auto'>
+      <div className='grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto'>
         {options.map((option) => (
           <motion.button
             key={option.value}
             onClick={() => handleSelect(option)}
+            className={`p-6 rounded-2xl border-2 transition-all ${
+              selected === option.value
+                ? 'bg-emerald-100 border-emerald-500 scale-105'
+                : 'bg-white border-gray-200 hover:border-emerald-400 hover:scale-105'
+            }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`relative p-6 rounded-2xl border-4 transition-all ${
-              selected === option.value
-                ? 'border-emerald-500 bg-emerald-50 shadow-xl'
-                : 'border-gray-200 hover:border-emerald-300 bg-white'
-            }`}
           >
-            {/* Icon/Image */}
-            <div className='text-6xl mb-3'>{option.icon || option.image}</div>
-
-            {/* Label */}
-            <div className='font-semibold text-gray-900'>{option.label}</div>
-
-            {/* Description */}
-            {option.description && (
-              <p className='text-sm text-gray-600 mt-2'>{option.description}</p>
-            )}
-
-            {/* Checkmark */}
-            {selected === option.value && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className='absolute top-2 right-2 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white'
-              >
-                ✓
-              </motion.div>
-            )}
+            <div className='text-5xl mb-3'>{option.icon}</div>
+            <div className='text-sm font-semibold text-gray-700'>
+              {option.label}
+            </div>
           </motion.button>
         ))}
       </div>
@@ -271,24 +237,29 @@ export const ImageQuestion = ({ question, options, onAnswer }) => {
   );
 };
 
-// 5. RAPID TAP (Quick choice with timer)
+// 5. RAPID TAP (Time pressure!) - FIXED VERSION
 export const RapidTapQuestion = ({
   question,
   options,
-  timeLimit = 5,
+  timeLimit = 10,
   onAnswer,
 }) => {
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [selected, setSelected] = useState(null);
+  const hasAnsweredRef = useRef(false);
 
-  useState(() => {
+  // Timer logic with useEffect
+  useEffect(() => {
+    if (hasAnsweredRef.current) return;
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          // Auto-select first option if time runs out
-          if (!selected) {
-            onAnswer(options[0].value);
+          if (!hasAnsweredRef.current) {
+            hasAnsweredRef.current = true;
+            // Defer state update to avoid rendering during render
+            setTimeout(() => onAnswer(null), 0);
           }
           return 0;
         }
@@ -297,47 +268,51 @@ export const RapidTapQuestion = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [onAnswer]);
 
-  const handleSelect = (option) => {
-    setSelected(option.value);
-    if (navigator.vibrate) navigator.vibrate(10);
+  const handleAnswer = useCallback(
+    (value) => {
+      if (hasAnsweredRef.current) return;
+      hasAnsweredRef.current = true;
 
-    setTimeout(() => {
-      onAnswer(option.value);
-    }, 200);
-  };
+      setSelected(value);
+      if (navigator.vibrate) navigator.vibrate(10);
+
+      setTimeout(() => onAnswer(value), 200);
+    },
+    [onAnswer]
+  );
 
   return (
     <div className='text-center'>
-      {/* Timer */}
-      <motion.div
-        animate={{ scale: timeLeft <= 2 ? [1, 1.1, 1] : 1 }}
-        transition={{ duration: 0.5, repeat: timeLeft <= 2 ? Infinity : 0 }}
-        className={`text-6xl font-bold mb-4 ${
-          timeLeft <= 2 ? 'text-red-500' : 'text-emerald-600'
-        }`}
-      >
-        {timeLeft}
-      </motion.div>
+      <div className='mb-6'>
+        <div
+          className={`text-5xl font-bold ${
+            timeLeft <= 3 ? 'text-red-500 animate-pulse' : 'text-emerald-600'
+          }`}
+        >
+          {timeLeft}s
+        </div>
+        <div className='text-sm text-gray-500 mt-2'>Trả lời nhanh!</div>
+      </div>
 
-      <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-2'>
-        First Instinct!
+      <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-8'>
+        {question}
       </h2>
-      <p className='text-lg text-gray-600 mb-8'>{question}</p>
 
-      <div className='grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto'>
+      <div className='grid grid-cols-2 gap-4 max-w-2xl mx-auto'>
         {options.map((option) => (
           <motion.button
             key={option.value}
-            onClick={() => handleSelect(option)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.9 }}
-            className={`py-8 px-4 rounded-xl font-bold text-lg transition-all ${
+            onClick={() => handleAnswer(option.value)}
+            disabled={hasAnsweredRef.current}
+            className={`p-6 rounded-2xl border-2 font-bold text-xl transition-all ${
               selected === option.value
-                ? 'bg-emerald-500 text-white shadow-xl'
-                : 'bg-white border-2 border-gray-200 hover:border-emerald-300'
+                ? 'bg-emerald-500 border-emerald-600 text-white'
+                : 'bg-white border-gray-200 hover:border-emerald-400 text-gray-900'
             }`}
+            whileHover={{ scale: hasAnsweredRef.current ? 1 : 1.05 }}
+            whileTap={{ scale: hasAnsweredRef.current ? 1 : 0.95 }}
           >
             {option.label}
           </motion.button>
@@ -347,87 +322,78 @@ export const RapidTapQuestion = ({
   );
 };
 
-// 6. MULTI-SELECT CHIPS
+// 6. MULTI-SELECT
 export const MultiSelectQuestion = ({
   question,
   options,
-  min = 1,
-  max = 5,
+  min,
+  max,
   onAnswer,
 }) => {
   const [selected, setSelected] = useState([]);
 
-  const toggleOption = (option) => {
-    if (selected.includes(option.value)) {
-      setSelected(selected.filter((v) => v !== option.value));
-    } else if (selected.length < max) {
-      setSelected([...selected, option.value]);
-      if (navigator.vibrate) navigator.vibrate(5);
+  const toggleOption = (value) => {
+    if (selected.includes(value)) {
+      setSelected(selected.filter((v) => v !== value));
+    } else {
+      if (selected.length < max) {
+        setSelected([...selected, value]);
+      }
     }
   };
 
-  const handleConfirm = () => {
-    if (selected.length >= min) {
+  const handleSubmit = () => {
+    if (selected.length >= min && selected.length <= max) {
       onAnswer(selected);
     }
   };
 
+  const isValid = selected.length >= min && selected.length <= max;
+
   return (
-    <div className='text-center max-w-3xl mx-auto'>
+    <div className='text-center max-w-3xl mx-auto px-4'>
       <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-4'>
         {question}
       </h2>
-      <p className='text-gray-600 mb-8'>
-        Chọn {min === max ? min : `${min}-${max}`} mục
-        {selected.length > 0 && ` • Đã chọn: ${selected.length}/${max}`}
+      <p className='text-sm text-gray-500 mb-8'>
+        Chọn {min === max ? min : `${min}-${max}`} lựa chọn ({selected.length}/
+        {max})
       </p>
 
-      <div className='flex flex-wrap gap-3 justify-center mb-8'>
-        {options.map((option) => {
-          const isSelected = selected.includes(option.value);
-
-          return (
-            <motion.button
-              key={option.value}
-              onClick={() => toggleOption(option)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`px-6 py-3 rounded-full font-semibold transition-all ${
-                isSelected
-                  ? 'bg-emerald-500 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {option.icon && <span className='mr-2'>{option.icon}</span>}
-              {option.label}
-              {isSelected && <span className='ml-2'>✓</span>}
-            </motion.button>
-          );
-        })}
+      <div className='grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-8'>
+        {options.map((option) => (
+          <motion.button
+            key={option.value}
+            onClick={() => toggleOption(option.value)}
+            className={`p-4 rounded-xl border-2 transition-all text-left ${
+              selected.includes(option.value)
+                ? 'bg-emerald-500 border-emerald-600 text-white shadow-lg'
+                : 'bg-white border-gray-200 hover:border-emerald-400 text-gray-900'
+            }`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className='flex items-center gap-3'>
+              <div className='text-2xl'>{option.icon}</div>
+              <div className='text-sm font-semibold'>{option.label}</div>
+            </div>
+          </motion.button>
+        ))}
       </div>
 
       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={handleConfirm}
-        disabled={selected.length < min}
-        className={`px-12 py-4 rounded-xl font-bold text-lg shadow-lg transition-all ${
-          selected.length >= min
-            ? 'bg-linear-to-r from-emerald-600 to-teal-600 text-white'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+        whileHover={{ scale: isValid ? 1.05 : 1 }}
+        whileTap={{ scale: isValid ? 0.95 : 1 }}
+        onClick={handleSubmit}
+        disabled={!isValid}
+        className={`px-10 py-4 rounded-xl font-bold shadow-lg transition-all ${
+          isValid
+            ? 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer'
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
         }`}
       >
-        Tiếp Theo ({selected.length}/{max})
+        Tiếp theo →
       </motion.button>
     </div>
   );
-};
-
-export default {
-  EmojiQuestion,
-  SwipeQuestion,
-  SliderQuestion,
-  ImageQuestion,
-  RapidTapQuestion,
-  MultiSelectQuestion,
 };

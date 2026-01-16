@@ -1,268 +1,508 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTestContext } from '../contexts/TestContext';
-// eslint-disable-next-line no-unused-vars
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  GameWrapper,
+  CompletionCelebration,
+} from '../components/ui/Gamification';
 
 // ============================================
-// PERSONAL INFO FORM
-// Final step - collect demographic & background info
+// PERSONAL INFO FORM - REDESIGNED & FIXED
 // ============================================
 
 function PersonalInfoForm() {
   const navigate = useNavigate();
   const { saveAnswer, submitTest, currentModule, sessionId } = useTestContext();
 
+  const [currentStep, setCurrentStep] = useState(0);
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [direction, setDirection] = useState(1);
+  const [startTime] = useState(Date.now());
+
+  // Form data
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    age: '',
+    fullName: '',
+    birthDay: '',
+    birthMonth: '',
+    birthYear: '',
     gender: '',
-    education: '',
-    current_status: '',
-    location: '',
-    experience_years: '',
+    likes: '',
+    dislikes: '',
+    dreams: '',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Questions config
+  const questions = [
+    {
+      id: 'fullName',
+      type: 'text',
+      question: 'Tên đầy đủ của bạn?',
+      placeholder: 'Nguyễn Văn A',
+      emoji: '👤',
+      validation: (val) => val.trim().length >= 3,
+      errorMsg: 'Vui lòng nhập tên (ít nhất 3 ký tự)',
+    },
+    {
+      id: 'birthDate',
+      type: 'date',
+      question: 'Ngày sinh của bạn?',
+      subtext: 'Quan trọng cho thần số học',
+      emoji: '🎂',
+      validation: (data) => {
+        const day = parseInt(data.birthDay);
+        const month = parseInt(data.birthMonth);
+        const year = parseInt(data.birthYear);
 
-  const handleChange = (field, value) => {
+        return (
+          day >= 1 &&
+          day <= 31 &&
+          month >= 1 &&
+          month <= 12 &&
+          year >= 1990 &&
+          year <= 2015
+        );
+      },
+      errorMsg: 'Vui lòng nhập ngày sinh hợp lệ',
+    },
+    {
+      id: 'gender',
+      type: 'choice',
+      question: 'Bạn là...?',
+      emoji: '⚡',
+      options: [
+        { value: 'male', label: 'Nam', icon: '👨' },
+        { value: 'female', label: 'Nữ', icon: '👩' },
+        { value: 'other', label: 'Khác', icon: '✨' },
+      ],
+    },
+    {
+      id: 'likes',
+      type: 'textarea',
+      question: 'Điều bạn yêu thích?',
+      subtext: 'Sở thích, hobbies, đam mê...',
+      placeholder: 'VD: Thích code, game, indie music...',
+      emoji: '💝',
+      validation: (val) => val.trim().length >= 20,
+      errorMsg: 'Chia sẻ ít nhất 20 ký tự nhé',
+      minLength: 20,
+    },
+    {
+      id: 'dislikes',
+      type: 'textarea',
+      question: 'Điều bạn không thích?',
+      subtext: 'Red flags, điều làm bạn khó chịu',
+      placeholder: 'VD: Ghét deadline gấp, nơi đông...',
+      emoji: '😤',
+      validation: (val) => val.trim().length >= 20,
+      errorMsg: 'Chia sẻ ít nhất 20 ký tự nhé',
+      minLength: 20,
+    },
+    {
+      id: 'dreams',
+      type: 'textarea',
+      question: 'Ước mơ của bạn?',
+      subtext: 'Mục tiêu, điều muốn đạt được',
+      placeholder: 'VD: Founder startup, tạo impact...',
+      emoji: '🌟',
+      validation: (val) => val.trim().length >= 20,
+      errorMsg: 'Chia sẻ ít nhất 20 ký tự nhé',
+      minLength: 20,
+    },
+  ];
+
+  const totalSteps = questions.length;
+  const currentQuestion = questions[currentStep];
+
+  const handleComplete = () => {
+    setShowCompletion(true);
+  };
+
+  const handleNext = useCallback(() => {
+    const q = currentQuestion;
+
+    // Validate
+    if (q.type === 'text' || q.type === 'textarea') {
+      if (!q.validation(formData[q.id])) {
+        alert(q.errorMsg);
+        return;
+      }
+    } else if (q.type === 'date') {
+      if (!q.validation(formData)) {
+        alert(q.errorMsg);
+        return;
+      }
+    } else if (q.type === 'choice') {
+      if (!formData[q.id]) {
+        alert('Vui lòng chọn một lựa chọn');
+        return;
+      }
+    }
+
+    // Next or complete
+    if (currentStep < totalSteps - 1) {
+      setDirection(1);
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleComplete();
+    }
+  }, [currentQuestion, currentStep, formData, totalSteps]);
+
+  // Handle Enter key (desktop only, not in textarea)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (window.innerWidth < 768) return;
+      if (document.activeElement.tagName === 'TEXTAREA') return;
+
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleNext]);
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setDirection(-1);
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleContinue = async () => {
+    setIsSubmitting(true);
+
+    // Save all data
+    saveAnswer(currentModule, 'full_name', formData.fullName);
+    saveAnswer(
+      currentModule,
+      'birth_date',
+      `${formData.birthDay}/${formData.birthMonth}/${formData.birthYear}`
+    );
+    saveAnswer(currentModule, 'birth_day', formData.birthDay);
+    saveAnswer(currentModule, 'birth_month', formData.birthMonth);
+    saveAnswer(currentModule, 'birth_year', formData.birthYear);
+    saveAnswer(currentModule, 'gender', formData.gender);
+    saveAnswer(currentModule, 'likes', formData.likes);
+    saveAnswer(currentModule, 'dislikes', formData.dislikes);
+    saveAnswer(currentModule, 'dreams', formData.dreams);
+
+    const age = new Date().getFullYear() - parseInt(formData.birthYear);
+    saveAnswer(currentModule, 'age', age);
+
+    // Submit test
+    await submitTest();
+
+    // Navigate to loading
+    setTimeout(() => {
+      navigate('/loading', { state: { sessionId } });
+    }, 500);
+  };
+
+  const updateField = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Save all form data
-    Object.entries(formData).forEach(([key, value]) => {
-      saveAnswer(currentModule, `personal_${key}`, value);
-    });
-
-    // Submit entire test
-    await submitTest();
-
-    // Navigate to loading screen
-    setTimeout(() => {
-      navigate('/loading', { state: { sessionId } });
-    }, 500);
+  // Slide variants - smoother!
+  const slideVariants = {
+    enter: (direction) => ({
+      x: direction > 0 ? 100 : -100,
+      opacity: 0,
+      scale: 0.95,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+    },
+    exit: (direction) => ({
+      x: direction > 0 ? -100 : 100,
+      opacity: 0,
+      scale: 0.95,
+    }),
   };
 
-  const isFormValid =
-    formData.name && formData.email && formData.age && formData.gender;
+  const renderQuestion = () => {
+    const q = currentQuestion;
 
-  return (
-    <div className='max-w-3xl mx-auto'>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className='bg-white rounded-3xl shadow-2xl p-8 md:p-12'
-      >
-        {/* Header */}
-        <div className='text-center mb-8'>
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring' }}
-            className='text-6xl mb-4'
-          >
-            👤
-          </motion.div>
-          <h1 className='text-3xl md:text-4xl font-bold text-gray-900 mb-3'>
-            Thông Tin Cá Nhân
-          </h1>
-          <p className='text-gray-600'>
-            Bước cuối cùng! Giúp chúng tôi hiểu bạn hơn để đưa ra gợi ý phù hợp
-            nhất 🎯
-          </p>
+    // TEXT INPUT
+    if (q.type === 'text') {
+      return (
+        <div className='w-full max-w-xl'>
+          <input
+            type='text'
+            value={formData[q.id]}
+            onChange={(e) => updateField(q.id, e.target.value)}
+            placeholder={q.placeholder}
+            autoFocus={window.innerWidth >= 768}
+            className='w-full px-4 py-3 text-lg font-semibold bg-white border-2 border-gray-300 rounded-xl focus:border-emerald-500 outline-none transition-colors text-gray-900 placeholder:text-gray-400'
+          />
         </div>
+      );
+    }
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className='space-y-6'>
-          {/* Name */}
-          <div>
-            <label className='block text-sm font-semibold text-gray-700 mb-2'>
-              Họ và tên <span className='text-red-500'>*</span>
-            </label>
-            <input
-              type='text'
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder='Nguyễn Văn A'
-              required
-              className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors'
-            />
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className='block text-sm font-semibold text-gray-700 mb-2'>
-              Email <span className='text-red-500'>*</span>
-            </label>
-            <input
-              type='email'
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              placeholder='example@email.com'
-              required
-              className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors'
-            />
-            <p className='text-sm text-gray-500 mt-1'>
-              Chúng tôi sẽ gửi kết quả đánh giá đến email này
-            </p>
-          </div>
-
-          {/* Age & Gender (side by side) */}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div>
-              <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                Tuổi <span className='text-red-500'>*</span>
+    // DATE INPUT
+    if (q.type === 'date') {
+      return (
+        <div className='w-full max-w-md'>
+          <div className='flex gap-2 justify-center'>
+            <div className='flex-1'>
+              <label className='block text-xs font-semibold text-gray-600 mb-1.5'>
+                Ngày
               </label>
               <input
                 type='number'
-                value={formData.age}
-                onChange={(e) => handleChange('age', e.target.value)}
-                placeholder='18'
-                min='15'
-                max='100'
-                required
-                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors'
+                inputMode='numeric'
+                value={formData.birthDay}
+                onChange={(e) => updateField('birthDay', e.target.value)}
+                placeholder='DD'
+                min='1'
+                max='31'
+                autoFocus={window.innerWidth >= 768}
+                className='w-full px-3 py-3 text-lg font-bold text-center bg-white border-2 border-gray-300 rounded-lg focus:border-emerald-500 outline-none transition-colors'
               />
             </div>
 
-            <div>
-              <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                Giới tính <span className='text-red-500'>*</span>
+            <div className='flex-1'>
+              <label className='block text-xs font-semibold text-gray-600 mb-1.5'>
+                Tháng
               </label>
-              <select
-                value={formData.gender}
-                onChange={(e) => handleChange('gender', e.target.value)}
-                required
-                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors'
-              >
-                <option value=''>Chọn giới tính</option>
-                <option value='male'>Nam</option>
-                <option value='female'>Nữ</option>
-                <option value='other'>Khác</option>
-              </select>
+              <input
+                type='number'
+                inputMode='numeric'
+                value={formData.birthMonth}
+                onChange={(e) => updateField('birthMonth', e.target.value)}
+                placeholder='MM'
+                min='1'
+                max='12'
+                className='w-full px-3 py-3 text-lg font-bold text-center bg-white border-2 border-gray-300 rounded-lg focus:border-emerald-500 outline-none transition-colors'
+              />
+            </div>
+
+            <div className='flex-1'>
+              <label className='block text-xs font-semibold text-gray-600 mb-1.5'>
+                Năm
+              </label>
+              <input
+                type='number'
+                inputMode='numeric'
+                value={formData.birthYear}
+                onChange={(e) => updateField('birthYear', e.target.value)}
+                placeholder='YYYY'
+                min='1990'
+                max='2015'
+                className='w-full px-3 py-3 text-lg font-bold text-center bg-white border-2 border-gray-300 rounded-lg focus:border-emerald-500 outline-none transition-colors'
+              />
             </div>
           </div>
+        </div>
+      );
+    }
 
-          {/* Education */}
-          <div>
-            <label className='block text-sm font-semibold text-gray-700 mb-2'>
-              Trình độ học vấn
-            </label>
-            <select
-              value={formData.education}
-              onChange={(e) => handleChange('education', e.target.value)}
-              className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors'
-            >
-              <option value=''>Chọn trình độ</option>
-              <option value='highschool'>THPT</option>
-              <option value='diploma'>Cao đẳng</option>
-              <option value='bachelor'>Đại học</option>
-              <option value='master'>Thạc sĩ</option>
-              <option value='phd'>Tiến sĩ</option>
-              <option value='other'>Khác</option>
-            </select>
+    // CHOICE - ✅ FIXED: Show selected state properly!
+    if (q.type === 'choice') {
+      return (
+        <div className='w-full max-w-md'>
+          <div className='grid grid-cols-3 gap-3'>
+            {q.options.map((option) => {
+              const isSelected = formData[q.id] === option.value;
+
+              return (
+                <motion.button
+                  key={option.value}
+                  onClick={() => {
+                    updateField(q.id, option.value);
+                    // Don't auto-advance, let user confirm
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    isSelected
+                      ? 'bg-emerald-500 border-emerald-600 text-white shadow-lg scale-105'
+                      : 'bg-white border-gray-300 hover:border-emerald-400 text-gray-900'
+                  }`}
+                >
+                  <div className='text-4xl mb-2'>{option.icon}</div>
+                  <div className='text-sm font-bold'>{option.label}</div>
+                  {isSelected && <div className='text-xs mt-1'>✓ Đã chọn</div>}
+                </motion.button>
+              );
+            })}
           </div>
+        </div>
+      );
+    }
 
-          {/* Current Status */}
-          <div>
-            <label className='block text-sm font-semibold text-gray-700 mb-2'>
-              Tình trạng hiện tại
-            </label>
-            <select
-              value={formData.current_status}
-              onChange={(e) => handleChange('current_status', e.target.value)}
-              className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors'
-            >
-              <option value=''>Chọn tình trạng</option>
-              <option value='student'>Học sinh/Sinh viên</option>
-              <option value='working'>Đang làm việc</option>
-              <option value='looking'>Đang tìm việc</option>
-              <option value='freelance'>Freelancer</option>
-              <option value='business'>Kinh doanh</option>
-              <option value='other'>Khác</option>
-            </select>
-          </div>
-
-          {/* Location */}
-          <div>
-            <label className='block text-sm font-semibold text-gray-700 mb-2'>
-              Thành phố
-            </label>
-            <input
-              type='text'
-              value={formData.location}
-              onChange={(e) => handleChange('location', e.target.value)}
-              placeholder='Hồ Chí Minh, Hà Nội...'
-              className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors'
-            />
-          </div>
-
-          {/* Experience Years */}
-          <div>
-            <label className='block text-sm font-semibold text-gray-700 mb-2'>
-              Số năm kinh nghiệm làm việc
-            </label>
-            <select
-              value={formData.experience_years}
-              onChange={(e) => handleChange('experience_years', e.target.value)}
-              className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors'
-            >
-              <option value=''>Chọn kinh nghiệm</option>
-              <option value='0'>Chưa có kinh nghiệm</option>
-              <option value='1-2'>1-2 năm</option>
-              <option value='3-5'>3-5 năm</option>
-              <option value='6-10'>6-10 năm</option>
-              <option value='10+'>Trên 10 năm</option>
-            </select>
-          </div>
-
-          {/* Privacy Notice */}
-          <div className='bg-linear-to-r from-blue-50 to-cyan-50 rounded-2xl p-4 border border-blue-200'>
-            <p className='text-sm text-gray-700'>
-              🔒 <strong>Bảo mật:</strong> Thông tin của bạn được mã hóa và bảo
-              mật tuyệt đối. Chúng tôi không chia sẻ dữ liệu cá nhân với bên thứ
-              ba.
-            </p>
-          </div>
-
-          {/* Submit Button */}
-          <motion.button
-            type='submit'
-            disabled={!isFormValid || isSubmitting}
-            whileHover={isFormValid ? { scale: 1.02 } : {}}
-            whileTap={isFormValid ? { scale: 0.98 } : {}}
-            className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all ${
-              isFormValid && !isSubmitting
-                ? 'bg-linear-to-r from-emerald-600 to-teal-600 text-white hover:shadow-xl'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {isSubmitting ? (
-              <span className='flex items-center justify-center gap-2'>
-                <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                Đang xử lý...
+    // TEXTAREA - ✅ FIXED: No scroll, compact!
+    if (q.type === 'textarea') {
+      return (
+        <div className='w-full max-w-xl'>
+          <textarea
+            value={formData[q.id]}
+            onChange={(e) => updateField(q.id, e.target.value)}
+            placeholder={q.placeholder}
+            autoFocus={window.innerWidth >= 768}
+            rows={3}
+            className='w-full px-3 py-3 text-sm bg-white border-2 border-gray-300 rounded-xl focus:border-emerald-500 outline-none transition-colors text-gray-900 placeholder:text-gray-400 resize-none'
+          />
+          {q.minLength && (
+            <div className='text-right text-xs mt-1'>
+              <span
+                className={
+                  formData[q.id].length >= q.minLength
+                    ? 'text-emerald-600 font-semibold'
+                    : 'text-gray-500'
+                }
+              >
+                {formData[q.id].length}/{q.minLength}
               </span>
-            ) : (
-              'Hoàn Thành & Xem Kết Quả 🎉'
-            )}
-          </motion.button>
-
-          {!isFormValid && (
-            <p className='text-center text-sm text-red-500'>
-              * Vui lòng điền đầy đủ các thông tin bắt buộc
-            </p>
+            </div>
           )}
-        </form>
-      </motion.div>
-    </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <>
+      <GameWrapper
+        currentQuestion={currentStep + 1}
+        totalQuestions={totalSteps}
+        onComplete={handleComplete}
+      >
+        <div className='w-full flex flex-col h-full'>
+          {/* Back button */}
+          {currentStep > 0 && (
+            <div className='mb-3'>
+              <motion.button
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                onClick={handleBack}
+                className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+              >
+                <svg
+                  className='w-5 h-5 text-gray-600'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M15 19l-7-7 7-7'
+                  />
+                </svg>
+              </motion.button>
+            </div>
+          )}
+
+          {/* Main content - NO SCROLL! */}
+          <div className='flex-1 flex items-center justify-center'>
+            <AnimatePresence mode='wait' custom={direction}>
+              <motion.div
+                key={currentStep}
+                custom={direction}
+                variants={slideVariants}
+                initial='enter'
+                animate='center'
+                exit='exit'
+                transition={{
+                  x: { type: 'spring', stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.2 },
+                  scale: { duration: 0.2 },
+                }}
+                className='text-center w-full px-4'
+              >
+                {/* Emoji */}
+                <motion.div
+                  initial={{ scale: 0, rotate: -90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 15,
+                  }}
+                  className='text-5xl mb-3'
+                >
+                  {currentQuestion.emoji}
+                </motion.div>
+
+                {/* Question */}
+                <div className='mb-6'>
+                  <h2 className='text-lg md:text-xl font-bold text-gray-900 mb-1'>
+                    {currentQuestion.question}
+                  </h2>
+                  {currentQuestion.subtext && (
+                    <p className='text-xs text-gray-500'>
+                      {currentQuestion.subtext}
+                    </p>
+                  )}
+                </div>
+
+                {/* Input */}
+                <div className='flex justify-center'>{renderQuestion()}</div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Bottom button */}
+          <div className='pt-4 border-t border-gray-100'>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleNext}
+              className='w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-shadow'
+            >
+              {currentStep === totalSteps - 1 ? '✨ Hoàn thành' : 'Tiếp theo →'}
+            </motion.button>
+
+            {/* Hint - desktop only */}
+            {currentQuestion.type !== 'choice' && (
+              <div className='text-center mt-2 hidden md:block'>
+                <p className='text-xs text-gray-500'>
+                  <kbd className='px-1.5 py-0.5 bg-gray-200 rounded text-xs'>
+                    Enter ↵
+                  </kbd>{' '}
+                  để tiếp tục
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </GameWrapper>
+
+      {/* ✅ FIXED: Actually use isSubmitting! */}
+      {showCompletion && (
+        <CompletionCelebration
+          stats={{
+            time: `${Math.floor((Date.now() - startTime) / 60000)}:${(
+              ((Date.now() - startTime) / 1000) %
+              60
+            )
+              .toFixed(0)
+              .padStart(2, '0')}`,
+            speed: 'Thoughtful',
+            streak: 6,
+            badges: [
+              { icon: '✨', name: 'Self Aware' },
+              { icon: '🎯', name: 'Goal Oriented' },
+              { icon: '💝', name: 'Open Minded' },
+            ],
+          }}
+          onContinue={handleContinue}
+          isLoading={isSubmitting}
+        />
+      )}
+    </>
   );
 }
 

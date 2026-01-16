@@ -7,10 +7,13 @@ import {
   GameWrapper,
   CompletionCelebration,
 } from '../components/ui/Gamification';
+
 import {
   MultiSelectQuestion,
   ImageQuestion,
   SwipeQuestion,
+  SliderQuestion,
+  EmojiQuestion,
 } from '../components/ui/QuestionType';
 
 // ============================================
@@ -24,28 +27,25 @@ function CareerTest() {
   const [showCompletion, setShowCompletion] = useState(false);
   const [startTime] = useState(Date.now());
 
-  // Career Questions (10 questions)
+  // Career Questions (5 questions)
   const questions = [
-    // Industry interests
     {
       id: 'career_001',
       type: 'multiselect',
-      question: 'Chọn 3 ngành nghề bạn quan tâm nhất:',
+      question: 'Chọn 3 ngành nghề bạn hứng thú nhất:',
       min: 3,
       max: 3,
       options: [
         { value: 'tech', label: 'Technology/IT', icon: '💻' },
         { value: 'business', label: 'Business/Finance', icon: '💼' },
         { value: 'creative', label: 'Creative/Design', icon: '🎨' },
-        { value: 'healthcare', label: 'Healthcare', icon: '🏥' },
-        { value: 'education', label: 'Education', icon: '📚' },
+        { value: 'healthcare', label: 'Healthcare/Medical', icon: '🏥' },
+        { value: 'education', label: 'Education/Teaching', icon: '📚' },
         { value: 'marketing', label: 'Marketing/Sales', icon: '📢' },
         { value: 'engineering', label: 'Engineering', icon: '⚙️' },
-        { value: 'media', label: 'Media/Entertainment', icon: '🎬' },
+        { value: 'media', label: 'Media/Content', icon: '🎬' },
       ],
     },
-
-    // Work style preferences
     {
       id: 'career_002',
       type: 'swipe',
@@ -53,206 +53,54 @@ function CareerTest() {
       optionA: {
         value: 'remote',
         icon: '🏠',
-        label: 'Remote',
-        description: 'Làm ở nhà, linh hoạt địa điểm',
+        label: 'Remote/WFH',
+        description: 'Linh hoạt thời gian & địa điểm',
       },
       optionB: {
         value: 'office',
         icon: '🏢',
         label: 'Office',
-        description: 'Văn phòng, gặp gỡ trực tiếp',
+        description: 'Môi trường chuyên nghiệp, team gần',
       },
     },
     {
       id: 'career_003',
-      type: 'swipe',
-      question: 'Bạn muốn:',
-      optionA: {
-        value: 'specialist',
-        icon: '🎯',
-        label: 'Chuyên sâu',
-        description: 'Expert trong 1 lĩnh vực',
-      },
-      optionB: {
-        value: 'generalist',
-        icon: '🌐',
-        label: 'Đa dạng',
-        description: 'Biết nhiều lĩnh vực khác nhau',
+      type: 'slider',
+      question: 'Lương cao vs Đam mê - Bạn ưu tiên cái nào?',
+      min: 1,
+      max: 5,
+      labels: {
+        min: 'Lương cao 💰',
+        max: 'Đam mê 🔥',
       },
     },
-
-    // Company culture
     {
       id: 'career_004',
-      type: 'image',
-      question: 'Môi trường công ty lý tưởng:',
+      type: 'emoji',
+      question: 'Môi trường làm việc lý tưởng của bạn:',
       options: [
-        {
-          value: 'corporate',
-          icon: '🏢',
-          label: 'Corporate',
-          description: 'Chuyên nghiệp, quy trình rõ',
-        },
-        {
-          value: 'startup',
-          icon: '🚀',
-          label: 'Startup',
-          description: 'Năng động, sáng tạo',
-        },
-        {
-          value: 'ngo',
-          icon: '🤝',
-          label: 'NGO',
-          description: 'Phi lợi nhuận, ý nghĩa',
-        },
-        {
-          value: 'freelance',
-          icon: '🌍',
-          label: 'Freelance',
-          description: 'Độc lập, tự do',
-        },
+        { value: 'startup', icon: '🚀', label: 'Startup - Dynamic' },
+        { value: 'corporate', icon: '🏛️', label: 'Corporate - Stable' },
+        { value: 'freelance', icon: '🎨', label: 'Freelance - Freedom' },
+        { value: 'ngo', icon: '🌍', label: 'NGO - Impact' },
+        { value: 'government', icon: '🏢', label: 'Government - Secure' },
       ],
     },
-
-    // Career goals
     {
       id: 'career_005',
       type: 'multiselect',
-      question: 'Top 3 mục tiêu nghề nghiệp của bạn:',
+      question: 'Top 3 giá trị quan trọng nhất trong công việc:',
       min: 3,
       max: 3,
       options: [
-        { value: 'money', label: 'Kiếm nhiều tiền', icon: '💰' },
-        { value: 'impact', label: 'Tạo tác động', icon: '🎯' },
         { value: 'growth', label: 'Phát triển bản thân', icon: '📈' },
         { value: 'balance', label: 'Work-life balance', icon: '⚖️' },
+        { value: 'impact', label: 'Tạo impact xã hội', icon: '🌟' },
+        { value: 'income', label: 'Thu nhập cao', icon: '💰' },
         { value: 'recognition', label: 'Được công nhận', icon: '🏆' },
-        { value: 'autonomy', label: 'Độc lập/Tự chủ', icon: '🦅' },
-        { value: 'learning', label: 'Học hỏi liên tục', icon: '📚' },
-        { value: 'security', label: 'Ổn định/Bảo đảm', icon: '🛡️' },
-      ],
-    },
-
-    // Work pace
-    {
-      id: 'career_006',
-      type: 'swipe',
-      question: 'Bạn thích nhịp làm việc:',
-      optionA: {
-        value: 'fast',
-        icon: '⚡',
-        label: 'Nhanh',
-        description: 'Deadline gấp, nhiều task',
-      },
-      optionB: {
-        value: 'steady',
-        icon: '🐢',
-        label: 'Ổn định',
-        description: 'Từ từ, chất lượng',
-      },
-    },
-
-    // Role preferences
-    {
-      id: 'career_007',
-      type: 'image',
-      question: 'Vai trò bạn muốn trong 5 năm tới:',
-      options: [
-        {
-          value: 'ic',
-          icon: '⚙️',
-          label: 'Individual Contributor',
-          description: 'Chuyên môn cao',
-        },
-        {
-          value: 'manager',
-          icon: '👔',
-          label: 'Manager',
-          description: 'Quản lý team',
-        },
-        {
-          value: 'leader',
-          icon: '👑',
-          label: 'Executive',
-          description: 'Lãnh đạo cấp cao',
-        },
-        {
-          value: 'founder',
-          icon: '🚀',
-          label: 'Founder',
-          description: 'Khởi nghiệp',
-        },
-      ],
-    },
-
-    // Learning style
-    {
-      id: 'career_008',
-      type: 'multiselect',
-      question: 'Chọn 3 cách học và phát triển bạn thích:',
-      min: 3,
-      max: 3,
-      options: [
-        { value: 'courses', label: 'Courses/Training', icon: '🎓' },
-        { value: 'mentor', label: 'Mentorship', icon: '👨‍🏫' },
-        { value: 'doing', label: 'Learning by doing', icon: '⚙️' },
-        { value: 'reading', label: 'Books/Articles', icon: '📚' },
-        { value: 'networking', label: 'Networking', icon: '🤝' },
-        { value: 'projects', label: 'Side projects', icon: '💡' },
-        { value: 'conference', label: 'Conferences', icon: '🎤' },
-        { value: 'community', label: 'Communities', icon: '👥' },
-      ],
-    },
-
-    // Risk appetite
-    {
-      id: 'career_009',
-      type: 'swipe',
-      question: 'Về nghề nghiệp, bạn là:',
-      optionA: {
-        value: 'safe',
-        icon: '🛡️',
-        label: 'An toàn',
-        description: 'Ổn định, ít rủi ro',
-      },
-      optionB: {
-        value: 'risk',
-        icon: '🎲',
-        label: 'Mạo hiểm',
-        description: 'Thử thách, cơ hội lớn',
-      },
-    },
-
-    // Future vision
-    {
-      id: 'career_010',
-      type: 'image',
-      question: 'Trong 10 năm, bạn muốn:',
-      options: [
-        {
-          value: 'ceo',
-          icon: '👑',
-          label: 'CEO/Executive',
-          description: 'Lãnh đạo tổ chức',
-        },
-        {
-          value: 'expert',
-          icon: '🎯',
-          label: 'Top Expert',
-          description: 'Chuyên gia hàng đầu',
-        },
-        {
-          value: 'own_business',
-          icon: '🚀',
-          label: 'Own Business',
-          description: 'Doanh nghiệp riêng',
-        },
-        {
-          value: 'portfolio',
-          icon: '🌈',
-          label: 'Portfolio Career',
-          description: 'Nhiều vai trò',
-        },
+        { value: 'autonomy', label: 'Tự chủ', icon: '🎯' },
+        { value: 'teamwork', label: 'Làm việc nhóm', icon: '🤝' },
+        { value: 'innovation', label: 'Sáng tạo', icon: '💡' },
       ],
     },
   ];
@@ -312,6 +160,30 @@ function CareerTest() {
       );
     }
 
+    // ✅ FIX: Add SliderQuestion case!
+    if (q.type === 'slider') {
+      return (
+        <SliderQuestion
+          question={q.question}
+          min={q.min}
+          max={q.max}
+          labels={q.labels}
+          onAnswer={handleAnswer}
+        />
+      );
+    }
+
+    // ✅ FIX: Add EmojiQuestion case!
+    if (q.type === 'emoji') {
+      return (
+        <EmojiQuestion
+          question={q.question}
+          options={q.options}
+          onAnswer={handleAnswer}
+        />
+      );
+    }
+
     return null;
   };
 
@@ -346,7 +218,7 @@ function CareerTest() {
               .toFixed(0)
               .padStart(2, '0')}`,
             speed: 'Quick',
-            streak: 6,
+            streak: 5, // ✅ FIX: Đổi từ 6 thành 5
             badges: [
               { icon: '💼', name: 'Career Explorer' },
               { icon: '🎯', name: 'Goal Setter' },

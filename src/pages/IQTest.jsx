@@ -20,164 +20,64 @@ function IQTest() {
   const [showCompletion, setShowCompletion] = useState(false);
   const [startTime] = useState(Date.now());
 
-  // IQ Questions (12 questions - shorter but more challenging)
+  // IQ Questions (5 questions - shorter but more challenging)
   const questions = [
-    // Pattern Recognition
     {
       id: 'iq_001',
-      type: 'pattern',
-      question: 'Tìm số tiếp theo trong dãy:',
-      pattern: '2, 4, 8, 16, 32, ?',
+      type: 'rapid',
+      question: 'Tìm số tiếp theo: 2, 6, 12, 20, 30, ?',
+      timeLimit: 10,
       options: [
-        { value: '48', label: '48' },
-        { value: '64', label: '64' },
-        { value: '52', label: '52' },
-        { value: '128', label: '128' },
+        { value: 38, label: '38', icon: '🔢' },
+        { value: 40, label: '40', icon: '🔢' },
+        { value: 42, label: '42', icon: '🔢' },
+        { value: 44, label: '44', icon: '🔢' },
       ],
     },
     {
       id: 'iq_002',
-      type: 'pattern',
-      question: 'Số nào không cùng nhóm?',
-      pattern: '3, 6, 9, 12, 14, 18',
+      type: 'image',
+      question: 'Hình nào khác biệt?',
       options: [
-        { value: '3', label: '3' },
-        { value: '14', label: '14' },
-        { value: '12', label: '12' },
-        { value: '18', label: '18' },
+        { value: 'A', icon: '🔺', label: 'A' },
+        { value: 'B', icon: '🔻', label: 'B' },
+        { value: 'C', icon: '🔺', label: 'C' },
+        { value: 'D', icon: '🔺', label: 'D' },
       ],
     },
-
-    // Logic Puzzles
     {
       id: 'iq_003',
-      type: 'logic',
-      question: 'Nếu A = 1, B = 2, C = 3... thì "CAT" = ?',
+      type: 'rapid',
+      question: 'Nếu 5 người làm xong trong 5 ngày, 10 người làm xong trong?',
+      timeLimit: 8,
       options: [
-        { value: '24', label: '24' },
-        { value: '25', label: '25' },
-        { value: '23', label: '23' },
-        { value: '26', label: '26' },
+        { value: 2.5, label: '2.5 ngày', icon: '⏰' },
+        { value: 5, label: '5 ngày', icon: '⏰' },
+        { value: 10, label: '10 ngày', icon: '⏰' },
+        { value: 20, label: '20 ngày', icon: '⏰' },
       ],
     },
     {
       id: 'iq_004',
-      type: 'logic',
-      question:
-        '3 con mèo bắt 3 con chuột trong 3 phút. 100 con mèo bắt 100 con chuột mất bao lâu?',
+      type: 'image',
+      question: 'Con nào nặng nhất nếu: Chó > Mèo, Mèo > Chuột, Chuột > Vẹt?',
       options: [
-        { value: '3', label: '3 phút' },
-        { value: '100', label: '100 phút' },
-        { value: '33', label: '33 phút' },
-        { value: '300', label: '300 phút' },
+        { value: 'dog', icon: '🐕', label: 'Chó' },
+        { value: 'cat', icon: '🐱', label: 'Mèo' },
+        { value: 'mouse', icon: '🐭', label: 'Chuột' },
+        { value: 'parrot', icon: '🦜', label: 'Vẹt' },
       ],
     },
-
-    // Visual Pattern
     {
       id: 'iq_005',
-      type: 'image',
-      question: 'Hình nào hoàn thành pattern?',
-      options: [
-        { value: 'a', icon: '△', label: 'A' },
-        { value: 'b', icon: '□', label: 'B' },
-        { value: 'c', icon: '○', label: 'C' },
-        { value: 'd', icon: '◇', label: 'D' },
-      ],
-    },
-
-    // Quick Math
-    {
-      id: 'iq_006',
       type: 'rapid',
-      question: '25% của 80 = ?',
-      timeLimit: 10,
-      options: [
-        { value: '15', label: '15' },
-        { value: '20', label: '20' },
-        { value: '25', label: '25' },
-        { value: '30', label: '30' },
-      ],
-    },
-    {
-      id: 'iq_007',
-      type: 'rapid',
-      question: '7 × 8 + 12 = ?',
+      question: 'Từ nào KHÔNG cùng nhóm?',
       timeLimit: 8,
       options: [
-        { value: '68', label: '68' },
-        { value: '62', label: '62' },
-        { value: '56', label: '56' },
-        { value: '70', label: '70' },
-      ],
-    },
-
-    // Word Logic
-    {
-      id: 'iq_008',
-      type: 'logic',
-      question: 'LISTEN có cùng chữ cái với từ nào?',
-      options: [
-        { value: 'SILENT', label: 'SILENT' },
-        { value: 'LISTEN', label: 'LISTEN' },
-        { value: 'TALKING', label: 'TALKING' },
-        { value: 'SOUND', label: 'SOUND' },
-      ],
-    },
-
-    // Spatial Reasoning
-    {
-      id: 'iq_009',
-      type: 'spatial',
-      question: 'Nếu gấp hình vuông theo đường chéo 2 lần, ta được hình gì?',
-      options: [
-        { value: 'triangle', label: '△ Tam giác' },
-        { value: 'rectangle', label: '▭ Chữ nhật' },
-        { value: 'circle', label: '○ Tròn' },
-        { value: 'square_small', label: '□ Vuông nhỏ' },
-      ],
-    },
-
-    // Quick Thinking
-    {
-      id: 'iq_010',
-      type: 'rapid',
-      question:
-        'Trong 1 phòng có 4 góc. Mỗi góc có 1 con mèo. Trước mỗi con mèo có 3 con mèo. Có bao nhiêu con mèo?',
-      timeLimit: 15,
-      options: [
-        { value: '4', label: '4 con' },
-        { value: '12', label: '12 con' },
-        { value: '16', label: '16 con' },
-        { value: '7', label: '7 con' },
-      ],
-    },
-
-    // Pattern completion
-    {
-      id: 'iq_011',
-      type: 'pattern',
-      question: 'Hoàn thành: AB, CD, EF, GH, ?',
-      pattern: 'Tìm cặp tiếp theo',
-      options: [
-        { value: 'IJ', label: 'IJ' },
-        { value: 'HI', label: 'HI' },
-        { value: 'JK', label: 'JK' },
-        { value: 'IK', label: 'IK' },
-      ],
-    },
-
-    // Final challenge
-    {
-      id: 'iq_012',
-      type: 'logic',
-      question: 'Nếu 1=3, 2=3, 3=5, 4=4, 5=4, thì 6=?',
-      hint: 'Đếm số chữ cái',
-      options: [
-        { value: '3', label: '3' },
-        { value: '4', label: '4' },
-        { value: '5', label: '5' },
-        { value: '6', label: '6' },
+        { value: 'apple', label: 'Táo 🍎', icon: '🍎' },
+        { value: 'banana', label: 'Chuối 🍌', icon: '🍌' },
+        { value: 'carrot', label: 'Cà rốt 🥕', icon: '🥕' },
+        { value: 'orange', label: 'Cam 🍊', icon: '🍊' },
       ],
     },
   ];
