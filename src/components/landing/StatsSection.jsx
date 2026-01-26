@@ -21,7 +21,7 @@ const StatsSection = () => {
       role: 'Học sinh lớp 12',
       avatar: 'MA',
       content:
-        'DAPH2 giúp mình tìm ra được đam mê thực sự và con đường nghề nghiệp phù hợp. Rất chi tiết và chuyên nghiệp!',
+        'PathX giúp mình tìm ra được đam mê thực sự và con đường nghề nghiệp phù hợp. Rất chi tiết và chuyên nghiệp!',
     },
     {
       name: 'Nguyễn Khắc Bình',
@@ -73,7 +73,7 @@ const StatsSection = () => {
           className='text-center mb-12'
         >
           <h2 className='text-4xl md:text-5xl font-bold text-gray-900 mb-4'>
-            Học Sinh Nói Gì Về DAPH2
+            Học Sinh Nói Gì Về PathX
           </h2>
         </motion.div>
 

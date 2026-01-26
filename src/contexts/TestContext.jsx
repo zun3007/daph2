@@ -54,7 +54,7 @@ export const TestProvider = ({ children }) => {
 
   // Initialize session
   useEffect(() => {
-    const savedSession = localStorage.getItem('daph2_session');
+    const savedSession = localStorage.getItem('PathX_session');
 
     if (savedSession) {
       try {
@@ -68,7 +68,7 @@ export const TestProvider = ({ children }) => {
             totalModules: 4,
             answeredQuestions: 0,
             totalQuestions: 21,
-          }
+          },
         );
         setModuleProgress(session.moduleProgress || {});
       } catch (error) {
@@ -95,7 +95,7 @@ export const TestProvider = ({ children }) => {
         moduleProgress,
         lastUpdated: new Date().toISOString(),
       };
-      localStorage.setItem('daph2_session', JSON.stringify(session));
+      localStorage.setItem('PathX_session', JSON.stringify(session));
     }
   }, [sessionId, currentModule, answers, progress, moduleProgress]);
 
@@ -155,7 +155,7 @@ export const TestProvider = ({ children }) => {
       // ====================================
       const aiPrompt = generateAIPrompt(answers);
 
-      console.log('=== DAPH2 TEST COMPLETED ===');
+      console.log('=== PathX TEST COMPLETED ===');
       console.log('Session ID:', sessionId);
       console.log('Total Answers:', Object.keys(answers).length);
       console.log('\n=== AI PROMPT GENERATED ===\n');
@@ -187,13 +187,13 @@ export const TestProvider = ({ children }) => {
 
       // Save AI prompt to localStorage for now
       localStorage.setItem(
-        `daph2_prompt_${sessionId}`,
+        `PathX_prompt_${sessionId}`,
         JSON.stringify({
           sessionId,
           prompt: aiPrompt,
           answers,
           timestamp: new Date().toISOString(),
-        })
+        }),
       );
 
       // Navigate to loading screen
@@ -205,7 +205,7 @@ export const TestProvider = ({ children }) => {
 
   // Reset test
   const resetTest = useCallback(() => {
-    localStorage.removeItem('daph2_session');
+    localStorage.removeItem('PathX_session');
     const newSessionId = nanoid();
     setSessionId(newSessionId);
     setCurrentModule('iq');
@@ -229,12 +229,12 @@ export const TestProvider = ({ children }) => {
     (moduleId) => {
       return progress.completedModules.includes(moduleId);
     },
-    [progress.completedModules]
+    [progress.completedModules],
   );
 
   const getProgressPercentage = useCallback(() => {
     return Math.round(
-      (progress.answeredQuestions / progress.totalQuestions) * 100
+      (progress.answeredQuestions / progress.totalQuestions) * 100,
     );
   }, [progress.answeredQuestions, progress.totalQuestions]);
 
@@ -249,7 +249,7 @@ export const TestProvider = ({ children }) => {
     (moduleId) => {
       return moduleProgress[moduleId] || 0;
     },
-    [moduleProgress]
+    [moduleProgress],
   );
 
   const value = {
@@ -279,7 +279,7 @@ export const TestProvider = ({ children }) => {
 // AI PROMPT GENERATOR
 // ====================================
 function generateAIPrompt(answers) {
-  const prompt = `# DAPH2 Smart Orientation - Career Guidance Analysis
+  const prompt = `# PathX Smart Orientation - Career Guidance Analysis
 
 ## Candidate Profile Assessment
 

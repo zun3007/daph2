@@ -18,19 +18,19 @@ function TestFlow() {
   // Memoize calculations to prevent constant re-renders
   const overallProgress = useMemo(() => {
     return Math.round(
-      (progress.answeredQuestions / progress.totalQuestions) * 100
+      (progress.answeredQuestions / progress.totalQuestions) * 100,
     );
   }, [progress.answeredQuestions, progress.totalQuestions]);
 
   // Get current module info
   const currentModuleInfo = useMemo(
     () => modules.find((m) => m.id === currentModule),
-    [modules, currentModule]
+    [modules, currentModule],
   );
 
   const currentModuleIndex = useMemo(
     () => modules.findIndex((m) => m.id === currentModule),
-    [modules, currentModule]
+    [modules, currentModule],
   );
 
   // Handle exit
@@ -72,7 +72,7 @@ function TestFlow() {
                   />
                 </svg>
               </button>
-              <span className='text-xl font-bold text-gray-900'>DAPH2</span>
+              <span className='text-xl font-bold text-gray-900'>PathX</span>
             </div>
 
             {/* Overall Progress - Desktop */}
@@ -123,10 +123,10 @@ function TestFlow() {
                         isCompleted
                           ? 'bg-emerald-500 border-emerald-500 text-white'
                           : isCurrent
-                          ? 'bg-white border-emerald-500 text-emerald-600 shadow-lg'
-                          : isPast
-                          ? 'bg-gray-200 border-gray-300 text-gray-500'
-                          : 'bg-white border-gray-300 text-gray-400'
+                            ? 'bg-white border-emerald-500 text-emerald-600 shadow-lg'
+                            : isPast
+                              ? 'bg-gray-200 border-gray-300 text-gray-500'
+                              : 'bg-white border-gray-300 text-gray-400'
                       }`}
                     >
                       {isCompleted ? '✓' : module.icon}
@@ -210,8 +210,8 @@ function TestFlow() {
                             idx === currentModuleIndex
                               ? '#10b981'
                               : idx < currentModuleIndex
-                              ? '#6ee7b7'
-                              : '#d1d5db',
+                                ? '#6ee7b7'
+                                : '#d1d5db',
                         }}
                         transition={{ duration: 0.3 }}
                         className='h-1.5 rounded-full'

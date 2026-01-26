@@ -198,7 +198,7 @@ const SolutionSection = () => {
               transition={{ delay: 0.4, duration: 0.6 }}
               className='text-lg md:text-xl text-gray-600 mb-8 leading-relaxed'
             >
-              DAPH2 kết hợp sức mạnh của trí tuệ nhân tạo, nghiên cứu tâm lý học
+              PathX kết hợp sức mạnh của trí tuệ nhân tạo, nghiên cứu tâm lý học
               và dữ liệu nghề nghiệp để tạo ra lộ trình phát triển cá nhân hóa
               cho bạn.
             </motion.p>

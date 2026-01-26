@@ -274,7 +274,7 @@ function HistoryLookup() {
               </li>
               <li className='flex items-start gap-2'>
                 <span className='text-emerald-600'>•</span>
-                <span>Liên hệ support@daph2.com nếu cần hỗ trợ thêm</span>
+                <span>Liên hệ support@PathX.com nếu cần hỗ trợ thêm</span>
               </li>
             </ul>
           </div>

@@ -113,7 +113,7 @@ const ProblemSection = () => {
           className='text-center mt-12'
         >
           <p className='text-lg text-emerald-600 font-semibold'>
-            DAPH2 sẽ giúp bạn tìm ra câu trả lời
+            PathX sẽ giúp bạn tìm ra câu trả lời
           </p>
         </motion.div>
       </div>
