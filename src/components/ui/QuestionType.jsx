@@ -241,7 +241,7 @@ export const ImageQuestion = ({ question, options, onAnswer }) => {
 export const RapidTapQuestion = ({
   question,
   options,
-  timeLimit = 10,
+  timeLimit = 60,
   onAnswer,
 }) => {
   const [timeLeft, setTimeLeft] = useState(timeLimit);
@@ -280,7 +280,7 @@ export const RapidTapQuestion = ({
 
       setTimeout(() => onAnswer(value), 200);
     },
-    [onAnswer]
+    [onAnswer],
   );
 
   return (
