@@ -20,12 +20,12 @@ function IQTest() {
   const [showCompletion, setShowCompletion] = useState(false);
   const [startTime] = useState(Date.now());
 
-  // IQ Questions (5 questions - shorter but more challenging)
+  // IQ Questions - Teen friendly
   const questions = [
     {
       id: 'iq_001',
       type: 'rapid',
-      question: 'Tìm số tiếp theo: 2, 6, 12, 20, 30, ?',
+      question: 'Lướt feed thấy dãy số: 2, 6, 12, 20, 30, ? Số tiếp theo là gì?',
       timeLimit: 10,
       options: [
         { value: 38, label: '38', icon: '🔢' },
@@ -37,7 +37,7 @@ function IQTest() {
     {
       id: 'iq_002',
       type: 'image',
-      question: 'Hình nào khác biệt?',
+      question: 'Trong nhóm sticker này, cái nào khác biệt?',
       options: [
         { value: 'A', icon: '🔺', label: 'A' },
         { value: 'B', icon: '🔻', label: 'B' },
@@ -48,7 +48,7 @@ function IQTest() {
     {
       id: 'iq_003',
       type: 'rapid',
-      question: 'Nếu 5 người làm xong trong 5 ngày, 10 người làm xong trong?',
+      question: '5 bạn làm xong project nhóm trong 5 ngày. Nếu có 10 bạn thì mất bao lâu?',
       timeLimit: 8,
       options: [
         { value: 2.5, label: '2.5 ngày', icon: '⏰' },
@@ -60,7 +60,7 @@ function IQTest() {
     {
       id: 'iq_004',
       type: 'image',
-      question: 'Con nào nặng nhất nếu: Chó > Mèo, Mèo > Chuột, Chuột > Vẹt?',
+      question: 'So sánh size thú cưng: Chó > Mèo, Mèo > Chuột, Chuột > Vẹt. Con nào to nhất?',
       options: [
         { value: 'dog', icon: '🐕', label: 'Chó' },
         { value: 'cat', icon: '🐱', label: 'Mèo' },
@@ -71,7 +71,7 @@ function IQTest() {
     {
       id: 'iq_005',
       type: 'rapid',
-      question: 'Từ nào KHÔNG cùng nhóm?',
+      question: 'Game phân loại: Cái nào KHÔNG cùng nhóm?',
       timeLimit: 8,
       options: [
         { value: 'apple', label: 'Táo 🍎', icon: '🍎' },

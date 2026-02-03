@@ -25,42 +25,42 @@ function EQTest() {
   const [showCompletion, setShowCompletion] = useState(false);
   const [startTime] = useState(Date.now());
 
-  // EQ Questions (5 questions)
+  // EQ Questions - Teen friendly
   const questions = [
     {
       id: 'eq_001',
       type: 'emoji',
       question:
-        'Khi ai đó chỉ trích ý kiến của bạn trong meeting, bạn cảm thấy:',
+        'Bạn đang thuyết trình trước lớp và có bạn comment chê. Bạn cảm thấy:',
       options: [
         { value: 1, icon: '😤', label: 'Tức giận' },
         { value: 2, icon: '😕', label: 'Bị tổn thương' },
         { value: 3, icon: '🤔', label: 'Tò mò tại sao' },
         { value: 4, icon: '😌', label: 'Bình tĩnh lắng nghe' },
-        { value: 5, icon: '🙏', label: 'Biết ơn feedback' },
+        { value: 5, icon: '🙏', label: 'Cảm ơn góp ý' },
       ],
     },
     {
       id: 'eq_002',
       type: 'swipe',
-      question: 'Bạn thấy đồng nghiệp khóc ở góc văn phòng. Bạn:',
+      question: 'Bạn thấy bạn thân khóc trong toilet trường. Bạn sẽ:',
       optionA: {
         value: 'space',
-        label: '🚶 Cho họ không gian',
+        label: '🚶 Cho bạn không gian',
         icon: '🚶',
-        description: 'Để họ tự xử lý cảm xúc',
+        description: 'Để bạn tự bình tĩnh lại',
       },
       optionB: {
         value: 'approach',
-        label: '🤗 Đến hỏi thăm',
+        label: '🤗 Đến hỏi thăm ngay',
         icon: '🤗',
-        description: 'Lắng nghe và hỗ trợ ngay',
+        description: 'Lắng nghe và ở bên bạn',
       },
     },
     {
       id: 'eq_003',
       type: 'slider',
-      question: 'Bạn có dễ dàng nhận ra khi người khác không thoải mái?',
+      question: 'Bạn có dễ nhận ra khi bạn bè đang buồn dù họ vẫn cười?',
       min: 1,
       max: 5,
       labels: {
@@ -71,30 +71,30 @@ function EQTest() {
     {
       id: 'eq_004',
       type: 'emoji',
-      question: 'Khi giận dữ, bạn thường kiểm soát cảm xúc như thế nào?',
+      question: 'Khi bị thua game lúc sắp thắng, bạn thường:',
       options: [
         { value: 1, icon: '💥', label: 'Bùng nổ luôn' },
         { value: 2, icon: '😤', label: 'Khó kiềm chế' },
-        { value: 3, icon: '😐', label: 'Cố gắng bình tĩnh' },
-        { value: 4, icon: '😌', label: 'Dễ dàng điều chỉnh' },
-        { value: 5, icon: '🧘', label: 'Luôn kiểm soát tốt' },
+        { value: 3, icon: '😐', label: 'Hơi bực nhưng ok' },
+        { value: 4, icon: '😌', label: 'Chill, game thôi mà' },
+        { value: 5, icon: '🧘', label: 'Bình thường, chơi lại' },
       ],
     },
     {
       id: 'eq_005',
       type: 'swipe',
-      question: 'Ai đó vô tình làm bạn tổn thương. Bạn:',
+      question: 'Bạn thân vô tình nói điều làm bạn buồn. Bạn sẽ:',
       optionA: {
         value: 'confront',
-        label: '💬 Nói thẳng ngay',
+        label: '💬 Nói thẳng luôn',
         icon: '💬',
-        description: 'Giải quyết vấn đề trực tiếp',
+        description: 'Nói rõ để bạn hiểu',
       },
       optionB: {
         value: 'process',
-        label: '🤔 Suy nghĩ trước',
+        label: '🤔 Suy nghĩ trước đã',
         icon: '🤔',
-        description: 'Xử lý cảm xúc rồi mới nói',
+        description: 'Bình tĩnh rồi mới nói',
       },
     },
   ];

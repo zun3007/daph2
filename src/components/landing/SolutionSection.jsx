@@ -15,7 +15,7 @@ const SolutionSection = () => {
     },
     {
       label: 'Đánh giá đa chiều',
-      color: 'teal',
+      color: 'cyan',
       position: { desktop: { top: '50%', left: '10%' }, mobile: 1 },
     },
     {

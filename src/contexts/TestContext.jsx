@@ -11,13 +11,20 @@ import { nanoid } from 'nanoid';
 
 const TestContext = createContext();
 
-// ✅ UPDATED: 4 modules mới với question count chính xác
 const MODULES = [
   { id: 'iq', name: 'IQ Test', icon: '🧠', questionCount: 5 },
   { id: 'eq', name: 'EQ Test', icon: '💝', questionCount: 5 },
   { id: 'career', name: 'Career', icon: '💼', questionCount: 5 },
   { id: 'personal', name: 'About You', icon: '✨', questionCount: 6 },
 ];
+
+const IQ_CORRECT_ANSWERS = {
+  iq_001: 42,
+  iq_002: 'B',
+  iq_003: 5,
+  iq_004: 'dog',
+  iq_005: 'carrot',
+};
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useTestContext = () => {
@@ -32,30 +39,21 @@ export const TestProvider = ({ children }) => {
   const navigate = useNavigate();
   const isInitializing = useRef(true);
 
-  // Session & Progress
   const [sessionId, setSessionId] = useState(null);
-  const [currentModule, setCurrentModule] = useState('iq'); // ✅ Start with IQ
-
-  // Test answers
+  const [currentModule, setCurrentModule] = useState('iq');
   const [answers, setAnswers] = useState({});
-
-  // ✅ UPDATED: Progress tracking với numbers mới
   const [progress, setProgress] = useState({
     completedModules: [],
-    totalModules: 4, // ✅ 4 modules
+    totalModules: 4,
     answeredQuestions: 0,
-    totalQuestions: 21, // ✅ 5+5+5+6 = 21
+    totalQuestions: 21,
   });
-
-  // Module progress
   const [moduleProgress, setModuleProgress] = useState({});
 
   const modules = MODULES;
 
-  // Initialize session
   useEffect(() => {
     const savedSession = localStorage.getItem('PathX_session');
-
     if (savedSession) {
       try {
         const session = JSON.parse(savedSession);
@@ -80,11 +78,9 @@ export const TestProvider = ({ children }) => {
       const newSessionId = nanoid();
       setSessionId(newSessionId);
     }
-
     isInitializing.current = false;
   }, []);
 
-  // Auto-save to localStorage
   useEffect(() => {
     if (!isInitializing.current && sessionId) {
       const session = {
@@ -99,7 +95,6 @@ export const TestProvider = ({ children }) => {
     }
   }, [sessionId, currentModule, answers, progress, moduleProgress]);
 
-  // Save answer
   const saveAnswer = useCallback((moduleId, questionId, answer) => {
     setAnswers((prev) => ({
       ...prev,
@@ -108,14 +103,12 @@ export const TestProvider = ({ children }) => {
         [questionId]: answer,
       },
     }));
-
     setProgress((prev) => ({
       ...prev,
       answeredQuestions: prev.answeredQuestions + 1,
     }));
   }, []);
 
-  // Mark module as complete
   const completeModule = useCallback((moduleId) => {
     setProgress((prev) => ({
       ...prev,
@@ -123,10 +116,8 @@ export const TestProvider = ({ children }) => {
     }));
   }, []);
 
-  // Navigate to next module
   const goToNextModule = useCallback(() => {
     const currentIndex = modules.findIndex((m) => m.id === currentModule);
-
     if (currentIndex < modules.length - 1) {
       const nextModule = modules[currentIndex + 1];
       setCurrentModule(nextModule.id);
@@ -136,10 +127,8 @@ export const TestProvider = ({ children }) => {
     }
   }, [modules, currentModule, navigate]);
 
-  // Navigate to previous module
   const goToPreviousModule = useCallback(() => {
     const currentIndex = modules.findIndex((m) => m.id === currentModule);
-
     if (currentIndex > 0) {
       const prevModule = modules[currentIndex - 1];
       setCurrentModule(prevModule.id);
@@ -147,63 +136,28 @@ export const TestProvider = ({ children }) => {
     }
   }, [modules, currentModule, navigate]);
 
-  // ✅ UPDATED: Generate AI prompt and submit test
   const submitTest = useCallback(async () => {
     try {
-      // ====================================
-      // GENERATE AI ANALYSIS PROMPT
-      // ====================================
-      const aiPrompt = generateAIPrompt(answers);
+      const scores = computeScores(answers);
+      const aiPrompt = generateAIPrompt(scores, answers.personal);
 
-      console.log('=== PathX TEST COMPLETED ===');
-      console.log('Session ID:', sessionId);
-      console.log('Total Answers:', Object.keys(answers).length);
-      console.log('\n=== AI PROMPT GENERATED ===\n');
-      console.log(aiPrompt);
-      console.log('\n=========================\n');
-
-      // ====================================
-      // TODO: SEND TO AI API
-      // ====================================
-      // const response = await fetch('/api/analyze', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     sessionId,
-      //     prompt: aiPrompt,
-      //     answers: answers
-      //   })
-      // });
-      // const result = await response.json();
-
-      // ====================================
-      // TODO: SAVE TO SUPABASE
-      // ====================================
-      // await supabase.from('test_sessions').update({
-      //   status: 'completed',
-      //   ai_prompt: aiPrompt,
-      //   completed_at: new Date().toISOString()
-      // }).eq('id', sessionId);
-
-      // Save AI prompt to localStorage for now
       localStorage.setItem(
         `PathX_prompt_${sessionId}`,
         JSON.stringify({
           sessionId,
           prompt: aiPrompt,
+          scores,
           answers,
           timestamp: new Date().toISOString(),
         }),
       );
 
-      // Navigate to loading screen
       navigate('/loading');
     } catch (error) {
       console.error('Error submitting test:', error);
     }
   }, [sessionId, answers, navigate]);
 
-  // Reset test
   const resetTest = useCallback(() => {
     localStorage.removeItem('PathX_session');
     const newSessionId = nanoid();
@@ -220,7 +174,6 @@ export const TestProvider = ({ children }) => {
     navigate('/test');
   }, [navigate]);
 
-  // Helpers
   const getCurrentModuleInfo = useCallback(() => {
     return modules.find((m) => m.id === currentModule);
   }, [modules, currentModule]);
@@ -275,174 +228,212 @@ export const TestProvider = ({ children }) => {
   return <TestContext.Provider value={value}>{children}</TestContext.Provider>;
 };
 
-// ====================================
-// AI PROMPT GENERATOR
-// ====================================
-function generateAIPrompt(answers) {
-  const prompt = `# PathX Smart Orientation - Career Guidance Analysis
+function computeScores(answers) {
+  const iqAnswers = answers.iq || {};
+  let iqCorrect = 0;
+  for (const [qId, answer] of Object.entries(iqAnswers)) {
+    if (IQ_CORRECT_ANSWERS[qId] !== undefined && answer === IQ_CORRECT_ANSWERS[qId]) {
+      iqCorrect++;
+    }
+  }
 
-## Candidate Profile Assessment
+  const eqAnswers = answers.eq || {};
+  const numericEqKeys = ['eq_001', 'eq_003', 'eq_004'];
+  const eqNumericScores = numericEqKeys
+    .map((k) => eqAnswers[k])
+    .filter((v) => typeof v === 'number');
+  const eqAverage =
+    eqNumericScores.length > 0
+      ? Math.round(
+          (eqNumericScores.reduce((a, b) => a + b, 0) / eqNumericScores.length) * 10,
+        ) / 10
+      : 0;
 
-Please analyze this Vietnamese teenager's career assessment results and provide comprehensive guidance in Vietnamese.
+  const careerAnswers = answers.career || {};
 
----
-
-## 📊 TEST RESULTS
-
-### 1. IQ TEST (Logical Reasoning)
-${formatModuleAnswers(answers.iq, 'IQ')}
-
-### 2. EQ TEST (Emotional Intelligence)
-${formatModuleAnswers(answers.eq, 'EQ')}
-
-### 3. CAREER TEST (Work Preferences)
-${formatModuleAnswers(answers.career, 'Career')}
-
-### 4. PERSONAL INFORMATION
-${formatPersonalInfo(answers.personal)}
-
----
-
-## 🎯 ANALYSIS REQUEST
-
-Please provide a comprehensive career guidance report in Vietnamese with the following sections:
-
-### 1. PERSONALITY OVERVIEW (Tổng quan tính cách)
-- Core personality traits based on IQ and EQ results
-- Strengths and growth areas
-- Working style preferences
-
-### 2. EMOTIONAL INTELLIGENCE ANALYSIS (Phân tích EQ)
-- Empathy level and social awareness
-- Self-awareness and emotional regulation
-- Relationship management style
-
-### 3. CAREER RECOMMENDATIONS (Gợi ý nghề nghiệp)
-- Top 5 suitable career paths with reasoning
-- Industries that align with their profile
-- Work environment preferences (startup/corporate/freelance)
-
-### 4. EDUCATION PATH (Lộ trình học tập)
-- Recommended majors/fields of study
-- Skills to develop
-- Learning style suggestions
-
-### 5. NUMEROLOGY INSIGHTS (Thần số học) 
-Based on birth date: ${answers.personal?.birth_date || 'Not provided'}
-- Life path number and meaning
-- Master number analysis
-- Name numerology (if provided)
-- Career alignment with numerology
-
-### 6. ACTION PLAN (Kế hoạch hành động)
-- Short-term steps (next 6 months)
-- Long-term goals (1-3 years)
-- Resources and next steps
-
-### 7. IKIGAI FRAMEWORK (Biểu đồ Ikigai)
-Create an Ikigai analysis showing:
-- What they LOVE (from likes/dreams)
-- What they're GOOD AT (from IQ/skills)
-- What the WORLD NEEDS (from values)
-- What they can be PAID FOR (from career preferences)
-
----
-
-## 📝 FORMATTING REQUIREMENTS
-
-- Write in Vietnamese, friendly tone for teenagers
-- Use emojis for visual appeal
-- Include specific examples and actionable advice
-- Reference their actual answers in the analysis
-- Be encouraging and realistic
-- Format with clear headers and bullet points
-
----
-
-## 🔒 IMPORTANT NOTES
-
-- This is a 16-19 year old Vietnamese student
-- Focus on Vietnamese education system and job market
-- Consider work-life balance preferences
-- Respect their stated values and dreams
-- Provide both idealistic and practical advice
-
-Please generate the complete analysis now.`;
-
-  return prompt;
-}
-
-// Helper: Format module answers with ACTUAL QUESTIONS
-function formatModuleAnswers(moduleAnswers, moduleName) {
-  if (!moduleAnswers) return `No ${moduleName} data available.`;
-
-  // Question mappings - extracted from actual test modules
-  const questionMappings = {
+  return {
     iq: {
-      iq_001: 'Tìm số tiếp theo trong dãy: 2, 4, 8, 16, 32, ?',
-      iq_002: 'Số nào không cùng nhóm: 3, 6, 9, 12, 14, 18?',
-      iq_003: 'Nếu A=1, B=2, C=3... thì CAT = ?',
-      iq_004:
-        '3 con mèo bắt 3 con chuột trong 3 phút. 100 con mèo bắt 100 con chuột mất bao lâu?',
-      iq_005: 'Hình nào hoàn thành pattern?',
+      score: iqCorrect,
+      outOf: 5,
     },
     eq: {
-      eq_001: 'Bạn thường nhận ra cảm xúc của mình nhanh như thế nào?',
-      eq_002: 'Khi ai đó chỉ trích ý kiến của bạn trong meeting, bạn cảm thấy:',
-      eq_003: 'Bạn có thể điều khiển cảm xúc của mình khi giận dữ?',
-      eq_004: 'Bạn có dễ dàng đọc được cảm xúc người khác qua nét mặt?',
-      eq_005: 'Khi xung đột xảy ra, bạn cảm thấy:',
+      selfAwareness: eqAnswers.eq_001 || 0,
+      emotionalControl: eqAnswers.eq_004 || 0,
+      empathy: eqAnswers.eq_003 || 0,
+      socialResponse: eqAnswers.eq_002 || null,
+      conflictStyle: eqAnswers.eq_005 || null,
+      average: eqAverage,
     },
     career: {
-      career_001: 'Chọn 3 ngành nghề bạn hứng thú nhất',
-      career_002: 'Bạn thích làm việc: Remote/WFH hay Office?',
-      career_003:
-        'Lương cao vs Đam mê - Bạn ưu tiên cái nào? (1=Lương cao, 5=Đam mê)',
-      career_004: 'Môi trường làm việc lý tưởng của bạn',
-      career_005: 'Top 3 giá trị quan trọng nhất trong công việc',
+      interests: careerAnswers.career_001 || [],
+      workStyle: careerAnswers.career_002 || null,
+      passionVsMoney: careerAnswers.career_003 || 3,
+      workEnvironment: careerAnswers.career_004 || null,
+      coreValues: careerAnswers.career_005 || [],
     },
   };
-
-  const moduleQuestions = questionMappings[moduleName] || {};
-
-  return Object.entries(moduleAnswers)
-    .map(([questionId, answer]) => {
-      const question = moduleQuestions[questionId] || questionId;
-
-      // Format answer based on type
-      let formattedAnswer;
-      if (Array.isArray(answer)) {
-        formattedAnswer = answer.join(', ');
-      } else if (typeof answer === 'object') {
-        formattedAnswer = JSON.stringify(answer);
-      } else {
-        formattedAnswer = answer;
-      }
-
-      return `**Q: ${question}**\nA: ${formattedAnswer}`;
-    })
-    .join('\n\n');
 }
 
-// Helper: Format personal info
-function formatPersonalInfo(personalInfo) {
-  if (!personalInfo) return 'No personal information provided.';
+function generateAIPrompt(scores, personalInfo) {
+  const personal = personalInfo || {};
 
-  return `
-**Full Name:** ${personalInfo.full_name || 'Not provided'}
-**Birth Date:** ${personalInfo.birth_date || 'Not provided'} (Day: ${
-    personalInfo.birth_day
-  }, Month: ${personalInfo.birth_month}, Year: ${personalInfo.birth_year})
-**Age:** ${personalInfo.age || 'Not provided'}
-**Gender:** ${personalInfo.gender || 'Not provided'}
+  const JSON_SCHEMA = `{
+  "userResults": {
+    "iqScore": <number>,
+    "iqOutOf": 5,
+    "iqLevel": "<string: Thấp/Trung bình/Khá/Cao/Xuất sắc>",
+    "eqScores": {
+      "selfAwareness": <number 1-5>,
+      "emotionalControl": <number 1-5>,
+      "empathy": <number 1-5>,
+      "conflictStyle": "<string>"
+    },
+    "eqLevel": "<string: Thấp/Trung bình/Khá/Cao/Xuất sắc>",
+    "careerInterests": [<string>],
+    "workStyle": "<string>",
+    "passionVsMoney": <number 1-5>,
+    "workEnvironment": "<string>",
+    "coreValues": [<string>]
+  },
+  "personality": {
+    "title": "<string: tên tính cách ngắn gọn, cool, teen-friendly>",
+    "emoji": "<single emoji>",
+    "summary": "<string: 2-3 câu tóm tắt tính cách, vibes teen>",
+    "strengths": ["<string>", "<string>", "<string>"],
+    "growthAreas": ["<string>", "<string>", "<string>"],
+    "funDescription": "<string: 1-2 câu so sánh vui, ví dụ 'Nếu là anime character thì bạn là...'>"
+  },
+  "objectiveAssessment": {
+    "iqAnalysis": "<string: 2-3 câu phân tích IQ, teen-friendly>",
+    "eqAnalysis": "<string: 2-3 câu phân tích EQ, teen-friendly>",
+    "careerFit": "<string: 2-3 câu phân tích sự phù hợp nghề>",
+    "overallProfile": "<string: 2-3 câu tổng quan, teen-friendly, khách quan>"
+  },
+  "careerRecommendations": [
+    {
+      "title": "<string: tên nghề>",
+      "emoji": "<single emoji>",
+      "matchPercent": <number 60-95>,
+      "reason": "<string: 1-2 câu lý do phù hợp>",
+      "salaryRange": "<string: ví dụ '15-40 triệu/tháng'>",
+      "demandLevel": "<string: Thấp/Trung bình/Cao/Rất cao>",
+      "skills": ["<string>", "<string>", "<string>", "<string>"]
+    }
+  ],
+  "numerology": {
+    "lifePathNumber": <number>,
+    "lifePathMeaning": "<string: 2-3 câu giải thích số chủ đạo>",
+    "personalityNumber": <number>,
+    "personalityMeaning": "<string: 2-3 câu giải thích số tính cách>",
+    "careerAlignment": "<string: 2-3 câu liên hệ thần số học với nghề>"
+  },
+  "learningRoadmap": [
+    {
+      "career": "<string: tên nghề>",
+      "phases": [
+        {
+          "phase": "<string: ví dụ 'Nền tảng (0-6 tháng)'>",
+          "tasks": ["<string>", "<string>", "<string>"],
+          "resources": ["<string>", "<string>", "<string>"]
+        }
+      ]
+    }
+  ],
+  "funFacts": [
+    {
+      "emoji": "<single emoji>",
+      "fact": "<string: fun fact về thần số học hoặc career>"
+    }
+  ]
+}`;
 
-**What they LOVE:**
-${personalInfo.likes || 'Not provided'}
+  const interestLabels = {
+    tech: 'Công nghệ (lập trình, AI, game)',
+    business: 'Kinh doanh (bán hàng, quản lý)',
+    creative: 'Sáng tạo (thiết kế, vẽ, film)',
+    healthcare: 'Y tế (bác sĩ, dược)',
+    education: 'Giáo dục (dạy học, đào tạo)',
+    marketing: 'Marketing (quảng cáo, truyền thông)',
+    engineering: 'Kỹ thuật (xây dựng, cơ khí)',
+    media: 'Media (nội dung, báo chí)',
+  };
 
-**What they DISLIKE:**
-${personalInfo.dislikes || 'Not provided'}
+  const envLabels = {
+    startup: 'Nơi năng động, thay đổi liên tục',
+    corporate: 'Nơi ổn định, có lộ trình rõ ràng',
+    freelance: 'Tự do, tự quyết định mọi thứ',
+    ngo: 'Tổ chức giúp đỡ xã hội',
+    government: 'Nhà nước, ổn định lâu dài',
+  };
 
-**Dreams & Goals:**
-${personalInfo.dreams || 'Not provided'}
-`;
+  const valueLabels = {
+    growth: 'Phát triển bản thân',
+    balance: 'Cân bằng học tập và vui chơi',
+    impact: 'Giúp ích cho xã hội',
+    income: 'Thu nhập cao',
+    recognition: 'Được công nhận',
+    autonomy: 'Tự chủ',
+    teamwork: 'Làm việc nhóm',
+    innovation: 'Sáng tạo',
+  };
+
+  const interests = (scores.career.interests || [])
+    .map((i) => interestLabels[i] || i)
+    .join(', ');
+  const env = envLabels[scores.career.workEnvironment] || scores.career.workEnvironment;
+  const values = (scores.career.coreValues || [])
+    .map((v) => valueLabels[v] || v)
+    .join(', ');
+  const workStyle =
+    scores.career.workStyle === 'remote'
+      ? 'Làm việc từ xa (remote)'
+      : 'Làm việc tại văn phòng';
+
+  return `Bạn là chuyên gia hướng nghiệp cho học sinh Việt Nam Gen Z (16-19 tuổi). Hãy phân tích kết quả bài test và tạo báo cáo hướng nghiệp.
+
+QUAN TRỌNG: Trả về DUY NHẤT một JSON object theo đúng schema bên dưới. KHÔNG thêm text nào khác ngoài JSON.
+
+## DỮ LIỆU HỌC SINH
+
+Tên: ${personal.full_name || 'Không rõ'}
+Ngày sinh: ${personal.birth_date || 'Không rõ'} (Ngày: ${personal.birth_day || '?'}, Tháng: ${personal.birth_month || '?'}, Năm: ${personal.birth_year || '?'})
+Tuổi: ${personal.age || 'Không rõ'}
+Giới tính: ${personal.gender === 'male' ? 'Nam' : personal.gender === 'female' ? 'Nữ' : 'Khác'}
+
+Điều yêu thích: ${personal.likes || 'Không rõ'}
+Điều không thích: ${personal.dislikes || 'Không rõ'}
+Ước mơ: ${personal.dreams || 'Không rõ'}
+
+## KẾT QUẢ TEST
+
+### IQ (Tư duy logic):
+- Số câu đúng: ${scores.iq.score}/${scores.iq.outOf}
+
+### EQ (Trí tuệ cảm xúc):
+- Tự nhận thức cảm xúc: ${scores.eq.selfAwareness}/5
+- Kiểm soát cảm xúc: ${scores.eq.emotionalControl}/5
+- Đồng cảm với người khác: ${scores.eq.empathy}/5
+- Phản ứng xã hội: ${scores.eq.socialResponse === 'space' ? 'Cho không gian riêng' : scores.eq.socialResponse === 'approach' ? 'Đến hỏi thăm ngay' : scores.eq.socialResponse || 'Không rõ'}
+- Xử lý xung đột: ${scores.eq.conflictStyle === 'confront' ? 'Nói thẳng ngay' : scores.eq.conflictStyle === 'process' ? 'Suy nghĩ trước rồi mới nói' : scores.eq.conflictStyle || 'Không rõ'}
+- Điểm EQ trung bình: ${scores.eq.average}/5
+
+### Career (Sở thích nghề nghiệp):
+- Ngành hứng thú: ${interests || 'Không rõ'}
+- Phong cách làm việc: ${workStyle}
+- Ưu tiên Lương vs Đam mê: ${scores.career.passionVsMoney}/5 (1=Lương cao, 5=Đam mê)
+- Môi trường: ${env || 'Không rõ'}
+- Giá trị cốt lõi: ${values || 'Không rõ'}
+
+## YÊU CẦU JSON OUTPUT
+
+${JSON_SCHEMA}
+
+## QUY TẮC:
+- Tất cả text PHẢI bằng tiếng Việt, giọng teen-friendly, casual, dùng emoji tự nhiên
+- careerRecommendations: ĐÚNG 5 nghề, matchPercent từ 60-95, realistic
+- learningRoadmap: 1 roadmap cho MỖI nghề đề xuất (5 roadmaps), mỗi cái 3 phases
+- funFacts: ĐÚNG 5 fun facts về thần số học và career
+- numerology: Tính CHÍNH XÁC life path number từ ngày sinh ${personal.birth_date || ''}
+- Giọng văn phải RẤT teen: nói chuyện như bạn bè, dùng từ Gen Z, references anime/game/TikTok
+- Khách quan nhưng tích cực, chỉ ra điểm cần cải thiện một cách nhẹ nhàng`;
 }
