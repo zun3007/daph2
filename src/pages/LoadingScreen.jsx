@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTestContext } from '../contexts/TestContext';
 import { callGeminiAPI, getErrorMessage, getFallbackResponse } from '../services/geminiAI';
+import { saveResult } from '../services/database';
 
 const messages = [
   { text: 'Đang chuẩn bị dữ liệu...', icon: '📋' },
@@ -41,11 +42,20 @@ const LoadingScreen = () => {
   const progressTimerRef = useRef(null);
 
   const handleSuccess = useCallback(
-    (result) => {
+    (result, personalInfo = null) => {
+      // 1. localStorage (primary - always works offline)
       localStorage.setItem(
         `PathX_result_${sessionId}`,
         JSON.stringify(result),
       );
+
+      // 2. Supabase (fire-and-forget - không block navigation)
+      if (personalInfo) {
+        saveResult(sessionId, result, personalInfo).catch(() => {
+          // Silent fail - app works fine without Supabase
+        });
+      }
+
       setApiStatus('success');
       setProgress(100);
       setTimeout(() => {
@@ -72,9 +82,10 @@ const LoadingScreen = () => {
         return;
       }
 
-      const { prompt } = JSON.parse(saved);
+      const { prompt, answers } = JSON.parse(saved);
       const result = await callGeminiAPI(prompt);
-      handleSuccess(result);
+      // Truyền personalInfo để lưu vào Supabase
+      handleSuccess(result, answers?.personal ?? null);
     } catch (error) {
       console.error('AI API error:', error);
       setErrorMessage(getErrorMessage(error));

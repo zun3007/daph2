@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 // Context
 import { TestProvider } from './contexts/TestContext';
+import AdminPage from './pages/AdminPage';
 import CareerTest from './pages/CareerTest';
 import EQTest from './pages/EQTest';
 import HistoryLookup from './pages/HistoryLookup';
@@ -11,6 +12,7 @@ import LoadingScreen from './pages/LoadingScreen';
 import NotFound from './pages/NotFound';
 import PersonalInfoForm from './pages/PersonalForm';
 import ResultsPage from './pages/ResultPage';
+import StatsPage from './pages/StatsPage';
 import TestFlow from './pages/TestFlow';
 
 function App() {
@@ -30,6 +32,8 @@ function App() {
           <Route path='/loading' element={<LoadingScreen />} />
           <Route path='/results/:sessionId' element={<ResultsPage />} />
           <Route path='/lookup' element={<HistoryLookup />} />
+          <Route path='/stats' element={<StatsPage />} />
+          <Route path='/admin' element={<AdminPage />} />
           <Route path='*' element={<NotFound />} />
         </Routes>
       </TestProvider>

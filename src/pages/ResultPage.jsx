@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTestContext } from '../contexts/TestContext';
 import html2canvas from 'html2canvas';
+import { getResultBySessionId } from '../services/database';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -112,17 +113,37 @@ function ResultsPage() {
   const [expandedRoadmap, setExpandedRoadmap] = useState(0);
   const resultRef = useRef(null);
   const [saving, setSaving] = useState(false);
-  console.log(data);
+  const [isLoadingDB, setIsLoadingDB] = useState(false);
 
   useEffect(() => {
+    // Step 1: localStorage (fast, works offline)
     const saved = localStorage.getItem(`PathX_result_${sessionId}`);
     if (saved) {
       try {
         setData(JSON.parse(saved));
+        return;
       } catch {
-        setData(null);
+        // Dữ liệu bị hỏng, thử fallback Supabase
       }
     }
+
+    // Step 2: Supabase fallback (cross-device sharing)
+    setIsLoadingDB(true);
+    getResultBySessionId(sessionId)
+      .then(({ data: dbData }) => {
+        if (dbData?.result_json) {
+          setData(dbData.result_json);
+          // Cache lại để lần sau không cần fetch
+          localStorage.setItem(
+            `PathX_result_${sessionId}`,
+            JSON.stringify(dbData.result_json),
+          );
+        }
+      })
+      .catch(() => {
+        // Silent fail - hiển thị "không tìm thấy"
+      })
+      .finally(() => setIsLoadingDB(false));
   }, [sessionId]);
 
   const handleShare = useCallback(async () => {
@@ -185,27 +206,50 @@ function ResultsPage() {
     return (
       <div className='min-h-screen bg-linear-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center p-6'>
         <div className='text-center max-w-md'>
-          <div className='text-6xl mb-6'>🔍</div>
-          <h2 className='text-2xl font-bold text-gray-900 mb-3'>
-            Kết quả không tìm thấy
-          </h2>
-          <p className='text-gray-600 mb-8'>
-            Có thể kết quả đã hết hạn hoặc session không tồn tại.
-          </p>
-          <div className='flex flex-col gap-3'>
-            <Link
-              to='/test'
-              className='px-6 py-3 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold text-center hover:shadow-lg transition-all'
-            >
-              Làm bài test mới
-            </Link>
-            <Link
-              to='/'
-              className='px-6 py-3 text-gray-600 hover:text-gray-800 text-center'
-            >
-              Về trang chủ
-            </Link>
-          </div>
+          {isLoadingDB ? (
+            <>
+              <div className='text-6xl mb-6'>🔄</div>
+              <h2 className='text-2xl font-bold text-gray-900 mb-3'>
+                Đang tải kết quả...
+              </h2>
+              <p className='text-gray-600 mb-6'>
+                Đang lấy dữ liệu từ server, vui lòng chờ!
+              </p>
+              <div className='flex justify-center'>
+                <div className='w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className='text-6xl mb-6'>🔍</div>
+              <h2 className='text-2xl font-bold text-gray-900 mb-3'>
+                Kết quả không tìm thấy
+              </h2>
+              <p className='text-gray-600 mb-8'>
+                Có thể kết quả đã hết hạn hoặc session không tồn tại.
+              </p>
+              <div className='flex flex-col gap-3'>
+                <Link
+                  to='/test'
+                  className='px-6 py-3 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold text-center hover:shadow-lg transition-all'
+                >
+                  Làm bài test mới
+                </Link>
+                <Link
+                  to='/lookup'
+                  className='px-6 py-3 bg-white text-emerald-600 border border-emerald-300 rounded-xl font-semibold text-center hover:shadow-md transition-all'
+                >
+                  Tra cứu kết quả cũ
+                </Link>
+                <Link
+                  to='/'
+                  className='px-6 py-3 text-gray-600 hover:text-gray-800 text-center'
+                >
+                  Về trang chủ
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );

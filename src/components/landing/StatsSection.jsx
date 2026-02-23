@@ -1,15 +1,30 @@
 // eslint-disable-next-line no-unused-vars
 import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import SectionContainer from '../utils/SectionContainer';
 import ScrollIndicator from '../utils/ScrollIndicator';
+import { getPublicStats } from '../../services/database';
 
 const StatsSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const [liveTotal, setLiveTotal] = useState(null);
+
+  useEffect(() => {
+    getPublicStats()
+      .then(({ data }) => {
+        if (data?.total_completions) {
+          setLiveTotal(Number(data.total_completions));
+        }
+      })
+      .catch(() => {}); // Silent fail – hardcoded fallback shown
+  }, []);
 
   const stats = [
-    { number: '10,000+', label: 'Học sinh đã sử dụng' },
+    {
+      number: liveTotal ? `${liveTotal.toLocaleString('vi-VN')}+` : '10,000+',
+      label: 'Học sinh đã sử dụng',
+    },
     { number: '95%', label: 'Độ hài lòng' },
     { number: '1,000+', label: 'Công ty đối tác' },
     { number: '15-20', label: 'Phút hoàn thành' },
