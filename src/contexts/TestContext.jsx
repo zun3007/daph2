@@ -136,10 +136,11 @@ export const TestProvider = ({ children }) => {
     }
   }, [modules, currentModule, navigate]);
 
-  const submitTest = useCallback(async () => {
+  const submitTest = useCallback(async (overrideAnswers = null) => {
     try {
-      const scores = computeScores(answers);
-      const aiPrompt = generateAIPrompt(scores, answers.personal);
+      const effectiveAnswers = overrideAnswers ?? answers;
+      const scores = computeScores(effectiveAnswers);
+      const aiPrompt = generateAIPrompt(scores, effectiveAnswers.personal);
 
       localStorage.setItem(
         `PathX_prompt_${sessionId}`,
@@ -147,7 +148,7 @@ export const TestProvider = ({ children }) => {
           sessionId,
           prompt: aiPrompt,
           scores,
-          answers,
+          answers: effectiveAnswers,
           timestamp: new Date().toISOString(),
         }),
       );

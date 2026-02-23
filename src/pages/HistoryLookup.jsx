@@ -63,6 +63,7 @@ function HistoryLookup() {
     birthDay: '',
     birthMonth: '',
     birthYear: '',
+    sessionId: '',
   });
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
@@ -108,6 +109,16 @@ function HistoryLookup() {
     }
   };
 
+
+  const handleOpenBySession = (e) => {
+    e.preventDefault();
+    const cleanSession = formData.sessionId.trim();
+    if (!cleanSession) {
+      setError('Vui lòng nhập session ID để mở kết quả');
+      return;
+    }
+    navigate(`/results/${cleanSession}`);
+  };
   return (
     <div className='min-h-screen bg-linear-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center p-4 md:p-6'>
       <div className='max-w-2xl w-full'>
@@ -265,6 +276,29 @@ function HistoryLookup() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Session lookup */}
+            <div className='mt-6 bg-gray-50 rounded-2xl p-5 border border-gray-100'>
+              <h3 className='font-bold text-gray-900 mb-2 text-sm'>Mở nhanh bằng Session ID</h3>
+              <p className='text-sm text-gray-600 mb-3'>
+                Nếu bạn có link cũ hoặc mã session, nhập vào đây để mở trực tiếp trang kết quả.
+              </p>
+              <form onSubmit={handleOpenBySession} className='flex flex-col sm:flex-row gap-2'>
+                <input
+                  type='text'
+                  placeholder='Ví dụ: V1StGXR8_Z5jdHi6B-myT'
+                  value={formData.sessionId}
+                  onChange={handleChange('sessionId')}
+                  className='flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm'
+                />
+                <button
+                  type='submit'
+                  className='px-5 py-3 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors'
+                >
+                  Mở kết quả
+                </button>
+              </form>
+            </div>
 
             {/* Footer */}
             <div className='mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4'>

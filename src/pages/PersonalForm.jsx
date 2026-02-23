@@ -13,7 +13,7 @@ import {
 
 function PersonalInfoForm() {
   const navigate = useNavigate();
-  const { saveAnswer, submitTest, currentModule, sessionId } = useTestContext();
+  const { saveAnswer, submitTest, currentModule, answers } = useTestContext();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [showCompletion, setShowCompletion] = useState(false);
@@ -175,31 +175,34 @@ function PersonalInfoForm() {
   const handleContinue = async () => {
     setIsSubmitting(true);
 
-    // Save all data
-    saveAnswer(currentModule, 'full_name', formData.fullName);
-    saveAnswer(
-      currentModule,
-      'birth_date',
-      `${formData.birthDay}/${formData.birthMonth}/${formData.birthYear}`
-    );
-    saveAnswer(currentModule, 'birth_day', formData.birthDay);
-    saveAnswer(currentModule, 'birth_month', formData.birthMonth);
-    saveAnswer(currentModule, 'birth_year', formData.birthYear);
-    saveAnswer(currentModule, 'gender', formData.gender);
-    saveAnswer(currentModule, 'likes', formData.likes);
-    saveAnswer(currentModule, 'dislikes', formData.dislikes);
-    saveAnswer(currentModule, 'dreams', formData.dreams);
+    const personalAnswers = {
+      full_name: formData.fullName,
+      birth_date: `${formData.birthDay}/${formData.birthMonth}/${formData.birthYear}`,
+      birth_day: formData.birthDay,
+      birth_month: formData.birthMonth,
+      birth_year: formData.birthYear,
+      gender: formData.gender,
+      likes: formData.likes,
+      dislikes: formData.dislikes,
+      dreams: formData.dreams,
+      age: new Date().getFullYear() - parseInt(formData.birthYear),
+    };
 
-    const age = new Date().getFullYear() - parseInt(formData.birthYear);
-    saveAnswer(currentModule, 'age', age);
+    // Save all data
+    Object.entries(personalAnswers).forEach(([key, value]) => {
+      saveAnswer(currentModule, key, value);
+    });
+
+    const nextAnswers = {
+      ...answers,
+      [currentModule]: {
+        ...(answers?.[currentModule] || {}),
+        ...personalAnswers,
+      },
+    };
 
     // Submit test
-    await submitTest();
-
-    // Navigate to loading
-    setTimeout(() => {
-      navigate('/loading', { state: { sessionId } });
-    }, 500);
+    await submitTest(nextAnswers);
   };
 
   const updateField = (field, value) => {
